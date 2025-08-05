@@ -2043,7 +2043,658 @@ export const stage2Questions: Question[] = [
       requiredValue: "ya",
     },
   },
-
+  {
+    id: "q200_28",
+    text: "28. Apakah kelompok Anda memiliki aturan tertulis yang melarang pekerja anak di bawah umur 15 tahun?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya memiliki aturan tertulis",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak memiliki aturan tertulis",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses membuat aturan tertulis",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_29",
+    text: "29. Apakah aturan ini sudah disosialisasikan ke semua anggota?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, sudah disosialisasikan",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, belum disosialisasikan",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses dan akan disosialisasikan",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_30",
+    text: "30. Apakah Anda memeriksa secara rutin bahwa tidak ada pelanggaran (misal melalui kunjungan lapang)?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, sudah memeriksa secara rutin",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, belum memeriksa",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses pemeriksaan",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_31",
+    text: "31. Apakah pekerja di kebun Bapak/Ibu dibayar sesuai kesepakatan dan tidak kurang dari upah minimum yang berlaku?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, pekerja dibayar sesuai upah minimum yang berlaku",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, pekerja tidak dibayar sesuai upah minimum yang berlaku",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses membuat kesepakatan upah dengan pekerja",
+        score: 1,
+      },
+    ],
+    dependsOn: {
+      questionId: "q16",
+      requiredValue: "ya",
+    },
+  },
+  {
+    id: "q200_32",
+    text: "32. Apakah semua pekerja, baik laki-laki maupun perempuan, dibayar dengan adil tanpa dibedakan?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, pekerja dibayar dengan adil",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, pekerja tidak dibayar dengan adil",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses membuat kesepakatan upah dengan pekerja",
+        score: 1,
+      },
+    ],
+    dependsOn: {
+      questionId: "q16",
+      requiredValue: "ya",
+    },
+  },
+  {
+    id: "q200_33",
+    text: "33. Apakah Bapak/Ibu pernah mengikuti pelatihan tentang hak pekerja untuk menyampaikan keluhan atau pengaduan?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, Pernah mengikuti pelatihan",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak Pernah mengikuti pelatihan",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses mengikuti pelatihan",
+        score: 1,
+      },
+    ],
+    dependsOn: {
+      questionId: "q17",
+      requiredValue: "ya",
+    },
+  },
+  {
+    id: "q200_34",
+    text: "34. Apakah Bapak/Ibu sudah memberitahukan kepada pekerja di kebun tentang cara dan tempat menyampaikan keluhan, jika mereka memiliki masalah?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, sudah memberitahu kepada pekerja",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, Belum memberitahu kepada pekerja",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses memberitahu kepada pekerja",
+        score: 1,
+      },
+    ],
+    dependsOn: {
+      questionId: "q17",
+      requiredValue: "ya",
+    },
+  },
+  {
+    id: "q200_35",
+    text: "35. Apakah Bapak/Ibu pernah mengikuti pelatihan tentang keselamatan kerja di kebun sawit, seperti cara aman menggunakan alat atau bahan kimia?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, mengikuti pelatihan tentang keselamatan kerja dikebun sawit",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, Belum mengikuti pelatihan tentang keselamatan kerja dikebun sawit",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pendaftaran pelatihan",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_36",
+    text: "36. Saat bekerja sendiri atau bersama pekerja, apakah Bapak/Ibu menggunakan alat pelindung seperti sarung tangan, masker, atau sepatu bot?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya menggunakan alat pelindung",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak memakai alat pelindung",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pembelian alat pelindung",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_37",
+    text: "37. Jika ada pekerja di kebun, apakah Bapak/Ibu juga menyediakan alat pelindung yang sesuai untuk mereka?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya menyediakan alat pelindung yang sesuai untuk mereka",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, saya tidak menyediakan alat pelindung yang sesuai untuk mereka",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pembelian alat pelindung",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_38",
+    text: "38. Apakah Bapak/Ibu tahu bahaya apa saja yang bisa terjadi saat menggunakan pestisida, alat tajam, atau saat panen?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya mengetahui nya",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak mengetahui resiko nya",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pembelajaran materi",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_39",
+    text: "39. Apakah Bapak/Ibu pernah ikut pelatihan atau penyuluhan yang membahas soal pencegahan diskriminasi, pelecehan, atau kekerasan terhadap pekerja?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, pernah mengikuti pelatihan/penyuluhan",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, tidak pernah mengikuti pelatihan/penyuluhan",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pendaftaran pelatihan",
+        score: 1,
+      },
+    ],
+    dependsOn: {
+      questionId: "q19",
+      requiredValue: "ya",
+    },
+  },
+  {
+    id: "q200_40",
+    text: "40. Setelah pelatihan atau penyuluhan tersebut, apakah Bapak/Ibu memahami pentingnya menciptakan lingkungan kerja yang aman dan saling menghormati, terutama bagi pekerja perempuan, anak muda, atau kelompok rentan lainnya?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, memahami pentingnya menciptakan lingkungan kerja yang aman dan saling menghormati",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak memahami materi pelatihan",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pendaftaran pelatihan",
+        score: 1,
+      },
+    ],
+    dependsOn: {
+      questionId: "q19",
+      requiredValue: "ya",
+    },
+  },
+  {
+    id: "q200_41",
+    text: "41. Apakah Bapak/Ibu menerapkan hal-hal dari pelatihan tersebut dalam memperlakukan pekerja di kebun? Misalnya, dengan mencegah kekerasan, tidak membeda-bedakan perlakuan, dan memastikan mereka merasa aman?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya menerapkan hal-hal dari pelatihan",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak menerapkan materi pelatihan",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pendaftaran pelatihan",
+        score: 1,
+      },
+    ],
+    dependsOn: {
+      questionId: "q19",
+      requiredValue: "ya",
+    },
+  },
+  {
+    id: "q200_42",
+    text: "42. Apakah Bapak/Ibu pernah mengikuti pelatihan atau sosialisasi tentang pentingnya menjaga hutan atau lahan yang punya nilai penting untuk alam, seperti HCV atau HCS?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya pernah mengikuti pelatihan",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak pernah mengikuti pelatihan",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pendaftaran pelatihan",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_43",
+    text: "43. Apa yang Bapak/Ibu pahami sebagai area yang tidak boleh diganggu karena penting bagi alam (seperti sungai, hutan kecil, atau pohon besar)?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya paham bahwa itu bisa mengganggu keseimbangan alam",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak mengerti",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pembelajaran materi",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_44",
+    text: "44. Apakah Bapak/Ibu tahu apa yang sebaiknya dilakukan jika ada hewan liar yang datang ke kebun? Misalnya babi, monyet, atau burung langka?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya mengetahui nya",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak mengetahui",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pembelajaran materi",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_45",
+    text: "45. Apakah Bapak/Ibu pernah diberi tahu cara menangani hewan liar tanpa membahayakan mereka?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya mengetahui nya",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak mengetahuinya",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pembelajaran materi",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_46",
+    text: "46. Apakah Bapak/Ibu tahu ada hewan atau tumbuhan langka di sekitar kebun, dan apakah Bapak/Ibu menjaga supaya mereka tidak terganggu?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya mengetahui nya",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak mengetahuinya",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pembelajaran materi",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_47",
+    text: "47. Apakah Bapak/Ibu tahu jika lahan kebun sawit Bapak/Ibu dulu (sebelum ditanami) merupakan hutan atau lahan yang penting untuk lingkungan atau satwa liar?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya mengetahui nya",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak mengetahui nya",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pembelajaran materi",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_48",
+    text: "48. Apakah Bapak/Ibu ikut dalam kegiatan kelompok yang membahas cara memperbaiki kembali hutan atau lahan penting yang pernah dibuka?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya mengikuti kegiatan kelompok",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak mengikuti kegiatan kelompok",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses mencari dan mengikuti kegiatan",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_49",
+    text: "49. Apakah Bapak/Ibu tahu bahwa kelompok sedang membuat rencana bersama untuk memperbaiki lahan yang dibuka sejak tahun 2005?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya mengetahuinya",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak mengetahuinya",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses mencari dan mengikuti kegiatan",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_49",
+    text: "49. Apakah Bapak/Ibu tahu bahaya apa saja yang bisa terjadi saat menggunakan pestisida, alat tajam, atau saat panen?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya mengetahui nya",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak mengetahui resiko nya",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pembelajaran materi",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_50",
+    text: "50. Apakah kelompok petani memiliki catatan atau peta tentang lahan-lahan yang dibuka sejak tahun 2005 (terutama lahan dengan HCV atau HCS)?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, kelompok petani memiliki catatan/peta tentang lahan",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, kelompok petani tidak memiliki catatan/peta tentang lahan",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses pencarian data catatan oleh kelompok petani",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_51",
+    text: "51. Apakah kelompok telah menyusun rencana bersama petani untuk memulihkan kembali sebagian lahan tersebut?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, kelompok sudah menyusun rencana bersama petani untuk memulihkan kembali sebagian lahan",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, kelompok belum menyusun rencana bersama petani untuk memulihkan kembali sebagian lahan",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses penyusunan rencana bersama petani untuk memulihkan kembali sebagian lahan",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_52",
+    text: "52. Apakah rencana tersebut sudah dikirimkan atau dikonsultasikan ke RSPO?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, sudah dikirimkan/dikonsultasikan ke RSPO",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, belum dikirimkan/dikonsultasikan ke RSPO",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses pengiriman/akan dikonsultasikan ke RSPO",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_53",
+    text: "53. Apakah Bapak/Ibu dan kelompok petani sudah menyusun rencana bersama sebelum membuka lahan baru untuk sawit?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya sudah menyusun rencana bersama",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya belum menyusun rencana bersama",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses penyusunan",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_54",
+    text: "54. Dalam rencana itu, apakah sudah dibahas cara menjaga atau melindungi kawasan penting seperti hutan atau tempat yang punya nilai penting bagi alam dan masyarakat (seperti hutan HCV dan HCS)?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, sudah dibahas",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, belum ada pembahasan tersebut",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pembahasan",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_55",
+    text: "55. Apakah rencana ini disusun secara bersama-sama, dengan melibatkan semua anggota kelompok yang berkepentingan?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, rencana ini disusun secara bersama-sama dengan melibatkan semua anggota kelompok yang berkepentingan",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, rencana ini tidak disusun secara bersama-sama",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses penyusunan",
+        score: 1,
+      },
+    ],
+  },
   {
     id: "q200_1_plantation_management",
     text: "Bagaimana Anda mengelola kebun kelapa sawit?",
