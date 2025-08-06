@@ -2696,61 +2696,745 @@ export const stage2Questions: Question[] = [
     ],
   },
   {
-    id: "q200_1_plantation_management",
-    text: "Bagaimana Anda mengelola kebun kelapa sawit?",
+    id: "q200_56",
+    text: "56. Apakah kelompok pernah membantu petani menyusun rencana tanam baru secara bersama-sama sebelum lahan dibuka?",
     options: [
       {
-        value: "sistematis",
-        label: "Dengan sistem yang terorganisir",
+        value: "ya",
+        label:
+          "Ya, pernah membantu petani menyusun rencana tanam baru bersama-sama",
         score: 2,
       },
-      { value: "sebagian", label: "Sebagian sistematis", score: 1 },
-      { value: "tradisional", label: "Cara tradisional", score: 0 },
+      {
+        value: "tidak",
+        label:
+          "Tidak, belum pernah membantu petani menyusun rencana tanam baru bersama-sama",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses membantu petani menyusun rencana tanam baru bersama-sama",
+        score: 1,
+      },
     ],
-    dependsOn: {
-      questionId: "q100_land_ownership",
-      requiredValue: "ya",
-    },
   },
   {
-    id: "q200_2_fertilizer_use",
-    text: "Bagaimana penggunaan pupuk di kebun Anda?",
+    id: "q200_57",
+    text: "57. Dalam rencana itu, apakah sudah dipastikan tidak ada hutan penting (seperti hutan lindung atau hutan bernilai konservasi tinggi) yang akan dibuka?",
     options: [
       {
-        value: "organik_anorganik",
-        label: "Kombinasi organik dan anorganik",
+        value: "ya",
+        label: "Ya, sudah dipastikan tidak ada hutan penting",
         score: 2,
       },
-      { value: "anorganik", label: "Hanya anorganik", score: 1 },
-      { value: "tidak_teratur", label: "Tidak teratur", score: 0 },
-    ],
-    dependsOn: {
-      questionId: "q1_land_ownership",
-      requiredValue: "ya",
-    },
-  },
-  {
-    id: "q200_3_worker_management",
-    text: "Bagaimana Anda mengelola pekerja di kebun?",
-    options: [
       {
-        value: "kontrak_jelas",
-        label: "Dengan kontrak kerja yang jelas",
-        score: 2,
+        value: "tidak",
+        label: "Tidak, belum dipastikan tidak ada hutan penting",
+        score: 0,
       },
-      { value: "informal", label: "Secara informal", score: 1 },
-      { value: "tidak_ada", label: "Bekerja sendiri", score: 1 },
+      {
+        value: "proses",
+        label: "Sedang Proses memastikan tidak ada hutan penting",
+        score: 1,
+      },
     ],
     roleSpecific: "manajer",
   },
   {
-    id: "q200_4_record_keeping",
-    text: "Apakah Anda mencatat aktivitas kebun secara rutin?",
+    id: "q200_58",
+    text: "58. Apakah proses penyusunan rencana ini dicatat atau didokumentasikan oleh kelompok sebelum petani mulai membuka lahan?",
     options: [
-      { value: "lengkap", label: "Ya, sangat lengkap", score: 2 },
-      { value: "sebagian", label: "Sebagian saja", score: 1 },
-      { value: "tidak", label: "Tidak mencatat", score: 0 },
+      {
+        value: "ya",
+        label:
+          "Ya, proses penyusunan rencana ini dicatat dan didokumentasikan oleh kelompok sebelum petani mulai membuka lahan",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, proses penyusunan rencana ini belum dicatat dan didokumentasikan oleh kelompok sebelum petani mulai membuka lahan",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses penyusunan rencana dan belum adanya pencatatan dan dokumentasi oleh kelompok",
+        score: 1,
+      },
     ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_59",
+    text: "59. Apakah Bapak/Ibu pernah ikut pelatihan tentang cara menanam sawit di tanah gambut, seperti bagaimana mengatur air dan mencegah kebakaran?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, saya pernah mengikuti pelatihan tentang cara menanam sawit di tanah gambut",
+        score: 2,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses pendaftaran mengikuti pelatihan",
+        score: 1,
+      },
+      {
+        value: "tidak",
+        label: "Tidak pernah mengikuti pelatihan",
+        score: 0,
+      },
+    ],
+    triggerSubQuestions: "ya",
+    subQuestions: [
+      {
+        id: "q200_59_sub1",
+        text: "59a. Apakah Bapak/Ibu sudah mulai menerapkan cara-cara yang diajarkan dalam pelatihan tersebut?",
+        options: [
+          {
+            value: "ya",
+            label:
+              "Ya, Sudah menerapkan cara-cara yang diajarkan dalam pelatihan",
+            score: 2,
+          },
+          {
+            value: "proses",
+            label: "Sedang Proses memahami materi pelatihan",
+            score: 1,
+          },
+          {
+            value: "tidak",
+            label: "Tidak menerapkan cara-cara yang diajarkan dalam pelatihan",
+            score: 0,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "q200_60",
+    text: "60. Apakah kelompok memiliki rencana atau panduan tertulis untuk membantu petani mengelola lahan gambut dengan aman dan mencegah kebakaran?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, kelompok memiliki rencana dan panduan tertulis untuk membantu petani mengelola lahan gambut",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, kelompok belum memiliki rencana dan panduan tertulis untuk membantu petani mengelola lahan gambut",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses membuat rencana dan panduan tertulis untuk membantu petani mengelola lahan gambut",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_61",
+    text: "61. Apakah kelompok memantau atau mendampingi petani dalam menerapkan rencana tersebut, terutama soal pengaturan air dan pengendalian kebakaran?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, kelompok memantau dan mendampingi petani dalam menerapkan rencana tersebut",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, kelompok tidak memantau dan mendampingi petani dalam menerapkan rencana tersebut",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses memantau dan mendampingi petani dalam menerapkan rencana tersebut",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_62",
+    text: "62. Apakah kelompok memiliki sistem atau kegiatan khusus untuk memantau dan mengatur air di lahan gambut milik petani?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, kelompok memiliki sistem atau kegiatan khusus untuk memantau dan mengatur air dilahan gambut milik petani",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, kelompok belum memiliki sistem atau kegiatan khusus untuk memantau dan mengatur air dilahan gambut milik petani",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses mmembuat sistem atau kegiatan khusus untuk memantau dan mengatur air dilahan gambut milik petani",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_63",
+    text: "63. Apakah Bapak/Ibu memiliki rencana untuk menanam ulang di lahan gambut?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya memiliki rencana untuk menanam ulang di lahan gambut",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, saya tidak memiliki rencana untuk menanam ulang di lahan gambut",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang proses menimbang untuk rencana menanam ulang di lahan gambut",
+        score: 1,
+      },
+    ],
+    dependsOn: {
+      questionId: "q24",
+      requiredValue: "ya",
+    },
+  },
+  {
+    id: "q200_64",
+    text: "64. Apakah Bapak/Ibu pernah mengikuti pelatihan yang membahas risiko banjir atau air asin (salinitas) di lahan gambut?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, saya pernah mengikuti pelatihan yang membahas resiko banjir atau air asin (salinitas) di lahan gambut",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak pernah mengikuti pelatihan",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses pendaftaran pelatihan",
+        score: 1,
+      },
+    ],
+    dependsOn: {
+      questionId: "q24",
+      requiredValue: "ya",
+    },
+  },
+  {
+    id: "q200_65",
+    text: "65. Apakah dalam pelatihan tersebut juga dijelaskan alternatif cara lain untuk memanfaatkan lahan jika terjadi risiko tinggi?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, dalam pelatihan terdapat materi alternatif cara lain memanfaatkan lahan jika terjadi resiko tinggi",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, dalam pelatihan tidak dijelaskan materi alternatif cara lain memanfaatkan lahan jika terjadi resiko tinggi",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses memahami materi pelatihan",
+        score: 1,
+      },
+    ],
+    dependsOn: {
+      questionId: "q24",
+      requiredValue: "ya",
+    },
+  },
+  {
+    id: "q200_66",
+    text: "66. Apakah kelompok memfasilitasi pelatihan kepada petani tentang risiko banjir dan salinitas di lahan gambut?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, kelompok memfasilitasi pelatihan kepada petani tentang resiko banjir dan salinitas dilahan gambut",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, kelompok belum memfasilitasi pelatihan kepada petani tentang resiko banjir dan salinitas dilahan gambut",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses rencana memfasilitasi pelatihan kepada petani tentang resiko banjir dan salinitas dilahan gambut",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_67",
+    text: "67. Apakah kelompok memberikan informasi atau pendampingan kepada petani tentang pilihan pengelolaan lahan lain selain sawit di lahan gambut?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, kelompok menginformasikan dan mendampingi petani tentang pilihan pengelolaan lahan lain selain sawit dilahan gambut",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, kelompok belum menginformasikan dan mendampingi petani tentang pilihan pengelolaan lahan lain selain sawit dilahan gambut",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses menginformasikan dan mendampingi petani tentang pilihan pengelolaan lahan lain selain sawit dilahan gambut",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_68",
+    text: "68. Apakah Bapak/Ibu pernah mengikuti pelatihan atau sosialisasi tentang cara membuka lahan dan mengelola kebun tanpa membakar?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, saya pernah mengikuti pelatihan atau sosialisasi tentang cara membuka lahan dan mengelola kebun tanpa membakar",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, saya belum pernah mengikuti pelatihan atau sosialiasi tentang cara membuka lahan dan mengelola kebun tanpa membakar",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses merencanakan mengikuti pelatihan",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_69",
+    text: "69. Apakah Bapak/Ibu mengetahui cara mencegah kebakaran dan apa yang harus dilakukan jika terjadi kebakaran di sekitar kebun atau desa?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya mengetahui cara mencegah dan apa yang harus dilakukan",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, saya tidak mengetahui cara mencegah dan apa yang harus dilakukan",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses mempelajari cara mencegah dan apa yang harus dilakukan",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_70",
+    text: "70. Setelah bergabung dalam kelompok ini, apakah Bapak/Ibu masih menggunakan api untuk membuka lahan atau mengendalikan hama?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, masih",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang proses merencanakan tidak menggunakan api",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_71",
+    text: "71. Apakah kelompok mencatat atau memantau adanya penggunaan api oleh petani setelah mereka bergabung dalam kelompok?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, kelompok mencatat atau memantau adanya penggunaan api oleh petani",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, kelompok belum mencatat atau memantau adanya penggunaan api oleh petani",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses merencanakan untuk mencatat atau memantau adanya penggunaan api oleh petani",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_72",
+    text: "72. Apakah kelompok menyelenggarakan pelatihan atau sosialisasi kepada anggota tentang pencegahan dan penanggulangan kebakaran?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, menyelenggarakan pelatihan/sosialisasi kepada anggota tentang pencegahan dan penanggulangan kebakaran",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak ada menyelenggarakan pelatihan/sosialisasi kepada anggota tentang pencegahan dan penanggulangan kebakaran",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses merencanakan menyelenggarakan pelatihan/sosialisasi kepada anggota tentang pencegahan dan penanggulangan kebakaran",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_73",
+    text: "73. Apakah Bapak/Ibu tahu apa itu zona penyangga sungai dan bagaimana cara menjaganya?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya mengetahui ",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak saya tidak mengetahui",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses memahami materi",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_74",
+    text: "74. Apakah Bapak/Ibu pernah mengikuti pelatihan atau sosialisasi terkait pengelolaan zona penyangga sungai?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, saya pernah mengikuti pelatihan/sosialisasi terkait pengelolaan zona penyangga sungai",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, saya tidak pernah mengikuti pelatihan/sosialisasi terkait pengelolaan zona penyangga sungai",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses pendaftaran untuk mengikuti pelatihan",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_75",
+    text: "75. Apakah kelompok memiliki rencana atau panduan tertulis untuk menjaga atau memperbaiki kondisi zona penyangga sungai di sekitar lahan petani?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, kelompok memiliki rencana atau panduan tertulis untuk menjaga atau memperbaiki kondisi zona penyangga sungai",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, kelompok tidak memiliki rencana atau panduan tertulis untuk menjaga atau memperbaiki kondisi zona penyangga sungai",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses merencanakan untuk membuat panduan tertulis untuk menjaga/memperbaiki kondisi zona penyangga sungai",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_76",
+    text: "76. Apakah kelompok sudah menyampaikan dan mendiskusikan rencana tersebut dengan para anggota?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, sudah menyampaikan dan mendiskusikan rencana tersebut dengan para anggota",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, belum ada penyampaian dan mendiskusikan rencana tersebut dengan para anggota",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses merencanakan penyampaian dan mendiskusikan rencana tersebut dengan para anggota",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_77",
+    text: "77. Apakah Bapak/Ibu pernah mendapat pelatihan tentang penggunaan pestisida yang aman dan cara penyimpanan serta pembuangannya?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, saya pernah mendapatkan pelatihan tentang penggunaan pestisida",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, saya belum pernah mendapatkan pelatihan tentang penggunaan pestisida",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses mendaftar pelatihan tentang penggunaan pestisida",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_78",
+    text: "78. Apakah Bapak/Ibu mengetahui bahwa beberapa pestisida seperti paraquat atau yang termasuk daftar berbahaya dilarang dipakai?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya sudah mengetahui nya",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya belum mengetahuinya",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses memahami materi pelatihan",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_79",
+    text: "79. Apakah Bapak/Ibu tahu bahwa ibu hamil, menyusui, dan anak muda tidak boleh terpapar pestisida di kebun?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya sudah mengetahui nya",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya belum mengetahui nya",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses memahami materi pelatihan",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_80",
+    text: "80. Apakah kelompok pernah menyelenggarakan atau memfasilitasi pelatihan tentang penggunaan pestisida yang aman bagi anggotanya?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, kelompok pernah menyelenggarakan atau memfasilitasi pelatihan tentang penggunaan pestisida yang aman",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, kelompok tidak pernah menyelenggarakan atau memfasilitasi pelatihan tentang penggunaan pestisida yang aman",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses merencanakan menyelenggarakan pelatihan tentang penggunaan pestisida yang aman",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_81",
+    text: "81. Apakah kelompok mencatat atau memantau jenis pestisida yang digunakan oleh petani dan memastikan tidak menggunakan yang dilarang?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, kelompok mencatat dan memantau jenis pestisida yang digunakan oleh petani",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, kelompok belum mencatat dan memantau jenis pestisida yang digunakan oleh petani",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses merencanakan untuk mencatat dan memantau jenis pestisida yang digunakan oleh petani",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_82",
+    text: "82. Apakah Bapak/Ibu pernah mengikuti pelatihan tentang cara mengelola hama, gulma, dan tanaman pengganggu lainnya secara aman dan ramah lingkungan?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, saya pernah mengikuti pelatihan tentang cara mengelola hama, gulma dan tanaman pengganggu lainnya",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, saya tidak pernah mengikuti pelatihan tentang cara mengelola hama, gulma dan tanaman pengganggu lainnya",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang prose pendaftaran pelatihan tentang cara mengelola hama, gulma dan tanaman pengganggu lainnya",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_83",
+    text: "83. Apakah Bapak/Ibu mengetahui bahwa ada cara mengendalikan hama tanpa harus selalu menggunakan pestisida (seperti IPM atau pengendalian terpadu)?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, saya mengetahui nya",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, saya tidak mengetahui nya",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses memahami materi",
+        score: 1,
+      },
+    ],
+  },
+  {
+    id: "q200_84",
+    text: "84. Apakah kelompok pernah memfasilitasi pelatihan kepada anggota terkait pengendalian hama terpadu (IPM) dan penggunaan bahan kimia yang aman?",
+    options: [
+      {
+        value: "ya",
+        label:
+          "Ya, kelompok pernah memfasilitasi pelatihan kepada anggota terkait pengendalian hama terpadu (IPM) dan penggunaan bahan kimia yang aman",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label:
+          "Tidak, kelompok tidak pernah memfasilitasi pelatihan kepada anggota terkait pengendalian hama terpadu (IPM) dan penggunaan bahan kimia yang aman",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label:
+          "Sedang Proses merencanakan untuk memfasilitasi pelatihan kepada anggota terkait pengendalian hama terpadu (IPM) dan penggunaan bahan kimia",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
+  },
+  {
+    id: "q200_85",
+    text: "85. Apakah kelompok menyimpan atau memiliki materi pelatihan atau panduan untuk praktik pengendalian gulma dan tanaman pengganggu yang aman?",
+    options: [
+      {
+        value: "ya",
+        label: "Ya, kelompok menyimpan dan memiliki materi pelatihan",
+        score: 2,
+      },
+      {
+        value: "tidak",
+        label: "Tidak, kelompok tidak menyimpan dan memiliki materi pelatihan",
+        score: 0,
+      },
+      {
+        value: "proses",
+        label: "Sedang Proses menyimpan materi pelatihan",
+        score: 1,
+      },
+    ],
+    roleSpecific: "manajer",
   },
 ];
 
