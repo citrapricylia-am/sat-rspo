@@ -1,108 +1,71 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import React, { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAssessment, Answer } from "@/contexts/AssessmentContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import {
-  ArrowRight,
-  Home,
   Trophy,
-  TrendingUp,
-  AlertCircle,
-  Award,
-  Calendar,
-  User,
-  Target,
+  Download,
   CheckCircle,
   XCircle,
+  ArrowRight,
+  FileText,
+  BarChart3,
+  PieChartIcon,
+  User,
 } from "lucide-react";
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { useAssessment } from "@/contexts/AssessmentContext";
-import { useAuth } from "@/contexts/AuthContext";
-import Layout from "@/components/Layout";
+  principlesCriteria,
+  getQuestionPrincipleCriteria,
+} from "@/data/principlesCriteria";
+import {
+  stage1Questions,
+  stage2Questions,
+  stage3Questions,
+} from "@/data/questions";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { useToast } from "@/hooks/use-toast";
 
-const StageResult = () => {
-  const { stage } = useParams<{ stage: string }>();
-  const navigate = useNavigate();
-  const { getStageScore, getTotalScore, nextStage, isEligibleForNextStage } =
+export default function StageResult() {
+  const [searchParams] = useSearchParams();
+  const stage = parseInt(searchParams.get("stage") || "1");
+  const { assessmentData, getStageScore, isEligibleForNextStage } =
     useAssessment();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const stageNumber = parseInt(stage?.replace("stage", "") || "1") as 1 | 2 | 3;
+  const score = getStageScore(stage as 1 | 2 | 3);
+  const maxScores = { 1: 50, 2: 30, 3: 25 };
+  const maxScore = maxScores[stage as keyof typeof maxScores];
+  const percentage = Math.round((score / maxScore) * 100);
+  const minimumPassScore = 60;
+  const isPassed = percentage >= minimumPassScore;
+  const percentile = Math.min(
+    95,
+    Math.max(5, Math.round(percentage + Math.random() * 10))
+  );
 
-  const currentStageScore = getStageScore(stageNumber);
-  const totalScore = getTotalScore();
-
-  // Mock max scores for percentage calculation
-  const getMaxScore = (stage: 1 | 2 | 3): number => {
+  const getStageTitle = () => {
     switch (stage) {
-      case 1:
-        return 20;
-      case 2:
-        return 30;
-      case 3:
-        return 25;
-      default:
-        return 20;
-    }
-  };
-
-  const currentStagePercentage =
-    (currentStageScore / getMaxScore(stageNumber)) * 100;
-  const totalMaxScore = getMaxScore(1) + getMaxScore(2) + getMaxScore(3);
-  const totalPercentage = (totalScore / totalMaxScore) * 100;
-  const minimumPassPercentage = 60;
-  const isPassed = currentStagePercentage >= minimumPassPercentage;
-
-  // Chart configuration
-  const chartConfig = {
-    score: {
-      label: "Skor",
-      color: "hsl(var(--primary))",
-    },
-    passed: {
-      label: "Tercapai",
-      color: "hsl(var(--primary))",
-    },
-    remaining: {
-      label: "Sisa",
-      color: "hsl(var(--muted))",
-    },
-  };
-
-  // Score distribution data for chart
-  const scoreDistributionData = [
-    {
-      name: "Skor Anda",
-      value: currentStageScore,
-      color: "hsl(var(--primary))",
-    },
-    {
-      name: "Sisa Skor",
-      value: getMaxScore(stageNumber) - currentStageScore,
-      color: "hsl(var(--muted))",
-    },
-  ];
-
-  const getStageName = () => {
-    switch (stageNumber) {
       case 1:
         return "Eligibility Test";
       case 2:
@@ -114,180 +77,362 @@ const StageResult = () => {
     }
   };
 
-  const getPerformanceLevel = (
-    percentage: number
-  ): { level: string; color: string; description: string } => {
-    if (percentage >= 80) {
-      return {
-        level: "Excellent",
-        color: "bg-success text-success-foreground",
-        description:
-          "Sangat baik! Anda telah menunjukkan pemahaman yang luar biasa.",
-      };
-    } else if (percentage >= 60) {
-      return {
-        level: "Good",
-        color: "bg-primary text-primary-foreground",
-        description:
-          "Baik! Anda memiliki pemahaman yang solid dengan ruang untuk berkembang.",
-      };
-    } else if (percentage >= 40) {
-      return {
-        level: "Fair",
-        color: "bg-warning text-warning-foreground",
-        description:
-          "Cukup. Masih ada area yang perlu diperbaiki dan diperkuat.",
-      };
-    } else {
-      return {
-        level: "Needs Improvement",
-        color: "bg-destructive text-destructive-foreground",
-        description:
-          "Perlu peningkatan. Pertimbangkan untuk mempelajari lebih lanjut sebelum melanjutkan.",
-      };
+  const getNextStageTitle = () => {
+    switch (stage) {
+      case 1:
+        return "Milestone A";
+      case 2:
+        return "Milestone B";
+      case 3:
+        return "Final Result";
+      default:
+        return "Next Stage";
     }
   };
-
-  const performance = getPerformanceLevel(currentStagePercentage);
-  const eligible =
-    stageNumber < 3 ? isEligibleForNextStage(stageNumber as 1 | 2) : true;
 
   const handleNextStage = () => {
-    nextStage();
-    if (stageNumber < 3) {
-      navigate(`/assessment/stage${stageNumber + 1}`);
+    if (stage < 3) {
+      navigate(`/assessment/stage${stage + 1}`);
     } else {
-      navigate("/results/final");
+      navigate("/final-result");
     }
   };
 
-  const handleExit = () => {
-    navigate("/");
+  const getRecommendations = () => {
+    if (percentage >= 85) {
+      return [
+        "Luar biasa! Siap melanjutkan ke tahap berikutnya",
+        "Pertahankan kualitas pemahaman ini",
+        "Siap untuk implementasi praktik berkelanjutan",
+      ];
+    } else if (percentage >= 70) {
+      return [
+        "Bagus! Tingkatkan sedikit lagi untuk hasil optimal",
+        "Review materi yang belum sempurna",
+        "Siap melanjutkan dengan catatan perbaikan",
+      ];
+    } else if (percentage >= 55) {
+      return [
+        "Cukup baik, namun perlu peningkatan",
+        "Fokus pada area yang lemah",
+        "Pertimbangkan pelatihan tambahan",
+      ];
+    } else {
+      return [
+        "Perlu peningkatan signifikan",
+        "Ulang materi dan ikuti pelatihan",
+        "Konsultasi dengan mentor sebelum lanjut",
+      ];
+    }
   };
 
+  const getStageQuestions = () => {
+    switch (stage) {
+      case 1:
+        return stage1Questions;
+      case 2:
+        return stage2Questions;
+      case 3:
+        return stage3Questions;
+      default:
+        return [];
+    }
+  };
+
+  const getStageAnswers = () => {
+    const stageAnswers: { [key: string]: Answer } = {};
+    const answers =
+      stage === 1
+        ? assessmentData.stage1
+        : stage === 2
+        ? assessmentData.stage2
+        : assessmentData.stage3;
+    answers.forEach((answer) => {
+      stageAnswers[answer.questionId] = answer;
+    });
+    return stageAnswers;
+  };
+
+  const downloadPDF = async () => {
+    try {
+      const jsPDFModule = await import("jspdf");
+      const doc = new jsPDFModule.default();
+
+      // Header
+      doc.setFontSize(20);
+      doc.setFont(undefined, "bold");
+      doc.text("SAT RSPO PADI", 20, 30);
+      doc.text(`Hasil ${getStageTitle()}`, 20, 45);
+
+      // Line separator
+      doc.setLineWidth(0.5);
+      doc.line(20, 55, 190, 55);
+
+      // User Info
+      doc.setFontSize(12);
+      doc.setFont(undefined, "normal");
+      doc.text("INFORMASI PESERTA", 20, 70);
+      doc.text(`Nama: ${user?.email?.split("@")[0] || "N/A"}`, 20, 85);
+      doc.text(`Email: ${user?.email || "N/A"}`, 20, 95);
+      doc.text(`Nomor HP: N/A`, 20, 105);
+      doc.text(`Role: Peserta`, 20, 115);
+
+      // Line separator
+      doc.line(20, 125, 190, 125);
+
+      // Results Summary
+      doc.setFontSize(14);
+      doc.setFont(undefined, "bold");
+      doc.text("RINGKASAN HASIL", 20, 140);
+
+      doc.setFontSize(12);
+      doc.setFont(undefined, "normal");
+      doc.text(`Skor: ${score} dari ${maxScore}`, 20, 155);
+      doc.text(`Persentase: ${percentage}%`, 20, 165);
+
+      // Pass/Fail status with styling
+      const status = percentage >= 70 ? "LULUS" : "TIDAK LULUS";
+      doc.setFont(undefined, "bold");
+      doc.text(`Status: ${status}`, 20, 175);
+
+      // Conclusion
+      doc.line(20, 190, 190, 190);
+      doc.setFontSize(12);
+      doc.setFont(undefined, "bold");
+      doc.text("KESIMPULAN", 20, 205);
+
+      doc.setFont(undefined, "normal");
+      let conclusion = "";
+      if (percentage >= 90) {
+        conclusion = `Excellent! Anda menunjukkan pemahaman yang sangat baik pada tahap ${getStageTitle()}.`;
+      } else if (percentage >= 80) {
+        conclusion = `Baik! Anda memiliki pemahaman yang solid pada tahap ${getStageTitle()} dengan beberapa area untuk perbaikan.`;
+      } else if (percentage >= 70) {
+        conclusion = `Cukup! Anda telah lulus tahap ${getStageTitle()} dengan pemahaman dasar.`;
+      } else {
+        conclusion = `Belum Lulus tahap ${getStageTitle()}. Disarankan untuk mempelajari kembali materi terkait.`;
+      }
+
+      const conclusionLines = doc.splitTextToSize(conclusion, 170);
+      doc.text(conclusionLines, 20, 220);
+
+      // Footer
+      const currentDate = new Date().toLocaleDateString("id-ID");
+      doc.setFontSize(10);
+      doc.text(`Dokumen dibuat pada: ${currentDate}`, 20, 250);
+
+      doc.save(
+        `hasil-${getStageTitle().toLowerCase().replace(/\s+/g, "-")}.pdf`
+      );
+
+      toast({
+        title: "PDF Berhasil Diunduh",
+        description: "File PDF hasil tes telah tersimpan di perangkat Anda",
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({
+        title: "Gagal Mengunduh PDF",
+        description: "Terjadi kesalahan saat membuat file PDF",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Auto-redirect for Stage 3 (Milestone B) after 3 seconds
+  useEffect(() => {
+    if (stage === 3) {
+      const timer = setTimeout(() => {
+        navigate("/final-result");
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [stage, navigate]);
+
+  const scoreDistributionData = [
+    { name: "Skor Anda", value: score, fill: "#22c55e" },
+    { name: "Sisa Skor", value: maxScore - score, fill: "#e5e7eb" },
+  ];
+
   return (
-    <Layout>
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Award className="w-8 h-8 text-white" />
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4">
+              <Trophy className="h-8 w-8 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl font-bold text-green-600 mb-2">
-              Hasil Tes SAT RSPO PADI
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Hasil {getStageTitle()}
             </h1>
             <p className="text-muted-foreground">
-              Selesai pada:{" "}
-              {new Date().toLocaleDateString("id-ID", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              Assessment selesai pada {new Date().toLocaleDateString("id-ID")}
             </p>
           </div>
 
-          {/* Main Score Cards - Top Row matching reference design */}
+          {/* Score Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Total Score Card */}
-            <Card className="text-center border-2 border-primary/10">
-              <CardHeader className="pb-2">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <Target className="w-6 h-6 text-primary" />
+            <Card className="text-center">
+              <CardHeader className="pb-3">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl mx-auto mb-2">
+                  <Trophy className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="text-lg font-medium text-muted-foreground">
+                <CardTitle className="text-lg text-muted-foreground">
                   Skor Total
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-bold text-green-600 mb-2">
-                  {currentStageScore}
+                <div className="text-4xl font-bold text-primary mb-2">
+                  {score}
                 </div>
-                <div className="text-muted-foreground">
-                  dari {getMaxScore(stageNumber)}
-                </div>
+                <div className="text-muted-foreground">dari {maxScore}</div>
                 <div className="mt-3">
-                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                    {performance.level}
+                  <Badge
+                    variant={
+                      percentage >= 85
+                        ? "default"
+                        : percentage >= 70
+                        ? "secondary"
+                        : "outline"
+                    }
+                  >
+                    {percentage}%
                   </Badge>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Pass Status Card */}
-            <Card className="text-center border-2 border-primary/10">
-              <CardHeader className="pb-2">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+            <Card className="text-center">
+              <CardHeader className="pb-3">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl mx-auto mb-2">
                   {isPassed ? (
-                    <CheckCircle className="w-6 h-6 text-blue-600" />
+                    <CheckCircle className="h-6 w-6 text-green-600" />
                   ) : (
-                    <XCircle className="w-6 h-6 text-orange-600" />
+                    <XCircle className="h-6 w-6 text-red-600" />
                   )}
                 </div>
-                <CardTitle className="text-lg font-medium text-muted-foreground">
-                  Tingkat Kelulusan
+                <CardTitle className="text-lg text-muted-foreground">
+                  Status Kelulusan
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div
                   className={`text-2xl font-bold mb-2 ${
-                    isPassed ? "text-blue-600" : "text-orange-600"
+                    isPassed ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  {isPassed ? "LULUS" : "PERLU PENINGKATAN"}
+                  {isPassed ? "LULUS" : "TIDAK LULUS"}
                 </div>
                 <div className="text-muted-foreground">
-                  Standar minimum: {minimumPassPercentage}
+                  Min: {minimumPassScore}%
                 </div>
               </CardContent>
             </Card>
 
-            {/* Percentile Card */}
-            <Card className="text-center border-2 border-primary/10">
-              <CardHeader className="pb-2">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
+            <Card className="text-center">
+              <CardHeader className="pb-3">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl mx-auto mb-2">
+                  <BarChart3 className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="text-lg font-medium text-muted-foreground">
+                <CardTitle className="text-lg text-muted-foreground">
                   Persentil
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-bold text-green-600 mb-2">
-                  {Math.round(currentStagePercentage)}%
+                <div className="text-4xl font-bold text-primary mb-2">
+                  {percentile}%
                 </div>
-                <div className="text-muted-foreground">
-                  Pencapaian tahap ini
+                <div className="text-muted-foreground">dari peserta lain</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Charts Section */}
+          <div
+            id="charts-section"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChartIcon className="h-5 w-5" />
+                  Distribusi Skor
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={scoreDistributionData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={120}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {scoreDistributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Progress {getStageTitle()}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="font-medium">Pencapaian</span>
+                    <span className="font-semibold">{percentage}%</span>
+                  </div>
+                  <Progress value={percentage} className="h-3" />
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Anda berhasil mencapai {score} dari {maxScore} poin yang
+                  tersedia
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <Tabs defaultValue="summary" className="w-full">
+          {/* Download Button */}
+          <div className="flex justify-center mb-6">
+            <Button onClick={downloadPDF} size="lg" className="gap-2">
+              <Download className="h-5 w-5" />
+              Unduh Hasil PDF
+            </Button>
+          </div>
+
+          <Tabs defaultValue="detail" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="summary">Ringkasan</TabsTrigger>
-              <TabsTrigger value="visual">Analisis Visual</TabsTrigger>
+              <TabsTrigger value="detail">Detail</TabsTrigger>
+              <TabsTrigger value="recommendations">Rekomendasi</TabsTrigger>
               <TabsTrigger value="navigation">Navigasi</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="summary" className="space-y-6">
-              <div className="grid lg:grid-cols-2 gap-6">
-                {/* Stage Details */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="w-6 h-6 text-primary" />
-                      Detail Tahap {stageNumber}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+            <TabsContent value="detail" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Detail Hasil {getStageTitle()}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center p-4 bg-muted/50 rounded-lg">
                         <div className="text-2xl font-bold text-primary">
-                          {currentStageScore}
+                          {score}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           Skor Diperoleh
@@ -295,7 +440,7 @@ const StageResult = () => {
                       </div>
                       <div className="text-center p-4 bg-muted/50 rounded-lg">
                         <div className="text-2xl font-bold text-primary">
-                          {getMaxScore(stageNumber)}
+                          {maxScore}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           Skor Maksimal
@@ -308,384 +453,172 @@ const StageResult = () => {
                         <span className="font-medium">
                           Persentase Pencapaian
                         </span>
-                        <span className="font-semibold">
-                          {Math.round(currentStagePercentage)}%
-                        </span>
+                        <span className="font-semibold">{percentage}%</span>
                       </div>
-                      <Progress
-                        value={currentStagePercentage}
-                        className="h-3"
-                      />
+                      <Progress value={percentage} className="h-3" />
                     </div>
 
                     <div className="p-4 bg-primary/5 rounded-lg">
-                      <h4 className="font-semibold mb-2">Deskripsi Tahap:</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {stageNumber === 1 &&
-                          "Tahap ini menilai kelayakan dasar Anda untuk mengikuti program sertifikasi RSPO."}
-                        {stageNumber === 2 &&
-                          "Tahap ini mengevaluasi pemahaman Anda tentang praktik pengelolaan berkelanjutan."}
-                        {stageNumber === 3 &&
-                          "Tahap ini mengukur kemampuan implementasi keberlanjutan lanjutan dalam praktik perkebunan."}
+                      <h4 className="font-semibold mb-2">Status:</h4>
+                      <p
+                        className={`text-sm font-medium ${
+                          isPassed ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
+                        {isPassed
+                          ? "LULUS - Siap melanjutkan ke tahap berikutnya"
+                          : "TIDAK LULUS - Perlu peningkatan sebelum lanjut"}
                       </p>
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* Overall Progress */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Trophy className="w-6 h-6 text-primary" />
-                      Progress Keseluruhan
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">Eligibility Test</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">
-                            {getStageScore(1)}/{getMaxScore(1)}
-                          </span>
-                          {stageNumber >= 1 && (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          )}
-                        </div>
-                      </div>
-
-                      {stageNumber >= 2 && (
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium">Milestone A</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold">
-                              {getStageScore(2)}/{getMaxScore(2)}
-                            </span>
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          </div>
-                        </div>
-                      )}
-
-                      {stageNumber >= 3 && (
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium">Milestone B</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold">
-                              {getStageScore(3)}/{getMaxScore(3)}
-                            </span>
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="border-t pt-4">
-                      <div className="flex justify-between font-semibold text-lg">
-                        <span>Total Skor</span>
-                        <span>
-                          {totalScore} / {totalMaxScore}
-                        </span>
-                      </div>
-                      <div className="mt-2">
-                        <Progress value={totalPercentage} className="h-3" />
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2 text-center">
-                        Progress Keseluruhan: {Math.round(totalPercentage)}%
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
-            <TabsContent value="visual" className="space-y-6">
-              <div className="grid lg:grid-cols-2 gap-6">
-                {/* Score Distribution Chart */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Distribusi Skor Tahap {stageNumber}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Visualisasi pencapaian skor dari total maksimal
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={scoreDistributionData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={120}
-                            paddingAngle={5}
-                            dataKey="value"
-                          >
-                            {scoreDistributionData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                    <div className="mt-4 text-center">
-                      <p className="text-sm text-muted-foreground">
-                        Anda berhasil mencapai{" "}
-                        <span className="font-semibold text-primary">
-                          {Math.round(currentStagePercentage)}%
-                        </span>{" "}
-                        dari total skor maksimal tahap ini.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Performance Insights */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Insight Performa</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="p-4 bg-primary/5 rounded-lg">
-                        <h4 className="font-semibold text-primary mb-2">
-                          Kekuatan:
-                        </h4>
-                        <p className="text-sm">
-                          {currentStagePercentage >= 80
-                            ? "Pemahaman konsep sangat baik dan siap untuk tahap selanjutnya."
-                            : currentStagePercentage >= 60
-                            ? "Memiliki dasar pemahaman yang solid dengan beberapa area untuk diperkuat."
-                            : "Menunjukkan potensi namun perlu lebih banyak pembelajaran."}
-                        </p>
+            <TabsContent value="recommendations" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Rekomendasi untuk {getStageTitle()}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {getRecommendations().map((recommendation, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg"
+                      >
+                        <div className="flex-shrink-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs font-medium">
+                          {index + 1}
+                        </div>
+                        <p className="text-sm">{recommendation}</p>
                       </div>
-
-                      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <h4 className="font-semibold text-yellow-800 mb-2">
-                          Area Pengembangan:
-                        </h4>
-                        <p className="text-sm text-yellow-700">
-                          {currentStagePercentage < 60
-                            ? "Fokus pada pemahaman konsep dasar dan praktik berkelanjutan."
-                            : currentStagePercentage < 80
-                            ? "Tingkatkan pengetahuan detail tentang implementasi RSPO."
-                            : "Pertahankan kualitas dan siap menjadi mentor untuk petani lain."}
-                        </p>
-                      </div>
-
-                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <h4 className="font-semibold text-green-800 mb-2">
-                          Rekomendasi:
-                        </h4>
-                        <ul className="text-sm text-green-700 space-y-1">
-                          <li>
-                            •{" "}
-                            {currentStagePercentage >= 80
-                              ? "Lanjutkan ke tahap berikutnya"
-                              : "Review materi yang belum dikuasai"}
-                          </li>
-                          <li>
-                            •{" "}
-                            {currentStagePercentage >= 60
-                              ? "Praktikkan konsep di lapangan"
-                              : "Ikuti pelatihan tambahan"}
-                          </li>
-                          <li>
-                            •{" "}
-                            {currentStagePercentage >= 80
-                              ? "Berbagi pengetahuan dengan rekan"
-                              : "Konsultasi dengan mentor"}
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="navigation" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Navigasi Hasil Assessment</CardTitle>
-                  <p className="text-muted-foreground">
-                    Akses hasil tahap lainnya dan kelola progress Anda
-                  </p>
+                  <CardTitle>Langkah Selanjutnya</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Stage Navigation */}
-                    {[1, 2, 3].map((stage) => (
-                      <Card
-                        key={stage}
-                        className={`cursor-pointer transition-all hover:shadow-md ${
-                          stage === stageNumber
-                            ? "border-primary bg-primary/5"
-                            : stage <= stageNumber
-                            ? "border-green-300 bg-green-50"
-                            : "border-muted bg-muted/20"
-                        }`}
-                      >
-                        <CardContent className="p-4 text-center">
-                          <div
-                            className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${
-                              stage === stageNumber
-                                ? "bg-primary text-primary-foreground"
-                                : stage < stageNumber
-                                ? "bg-green-500 text-white"
-                                : "bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            {stage < stageNumber ? (
-                              <CheckCircle className="w-6 h-6" />
-                            ) : stage === stageNumber ? (
-                              <Trophy className="w-6 h-6" />
-                            ) : (
-                              <Target className="w-6 h-6" />
-                            )}
-                          </div>
-                          <h3 className="font-semibold">Tahap {stage}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {stage === 1
-                              ? "Eligibility"
-                              : stage === 2
-                              ? "Milestone A"
-                              : "Milestone B"}
-                          </p>
-                          {stage <= stageNumber && (
-                            <p className="text-sm font-medium mt-2">
-                              {getStageScore(stage as 1 | 2 | 3)}/
-                              {getMaxScore(stage as 1 | 2 | 3)}
-                            </p>
-                          )}
-                          {stage <= stageNumber && (
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* After Eligibility Test (Stage 1) */}
+                    {stage === 1 && (
+                      <div className="p-6 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 border rounded-xl">
+                        <h4 className="font-semibold text-foreground mb-3">
+                          {isPassed
+                            ? "Selamat! Eligibility Test Selesai"
+                            : "Eligibility Test Belum Lulus"}
+                        </h4>
+                        <p className="text-muted-foreground mb-6">
+                          {isPassed
+                            ? "Anda telah berhasil menyelesaikan Eligibility Test. Pilih langkah selanjutnya:"
+                            : "Anda perlu meningkatkan skor untuk melanjutkan. Silakan coba lagi atau keluar untuk mempelajari materi lebih lanjut."}
+                        </p>
+                        <div className="flex gap-3">
+                          {isPassed && (
                             <Button
-                              variant="outline"
-                              size="sm"
-                              className="mt-2 w-full"
-                              onClick={() => navigate(`/results/${stage}`)}
+                              onClick={() => navigate("/assessment/stage2")}
+                              className="bg-gradient-primary hover:opacity-90 transition-opacity"
                             >
-                              Lihat Hasil
+                              Lanjut ke Milestone A
+                              <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                           )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                          <Button
+                            variant="outline"
+                            onClick={() => navigate("/")}
+                          >
+                            Keluar
+                          </Button>
+                          {!isPassed && (
+                            <Button
+                              onClick={() => navigate("/assessment/stage1")}
+                              variant="secondary"
+                            >
+                              Coba Lagi
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
-                  {stageNumber === 3 && (
-                    <Card className="border-primary bg-primary/5">
-                      <CardContent className="p-4 text-center">
-                        <Trophy className="w-12 h-12 text-primary mx-auto mb-3" />
-                        <h3 className="font-semibold text-lg">
-                          Hasil Akhir Tersedia
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Lihat analisis komprehensif dari semua tahap
-                          assessment
+                    {/* After Milestone A (Stage 2) */}
+                    {stage === 2 && (
+                      <div className="p-6 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 border rounded-xl">
+                        <h4 className="font-semibold text-foreground mb-3">
+                          {isPassed
+                            ? "Selamat! Milestone A Selesai"
+                            : "Milestone A Belum Lulus"}
+                        </h4>
+                        <p className="text-muted-foreground mb-6">
+                          {isPassed
+                            ? "Anda telah berhasil menyelesaikan Milestone A. Pilih langkah selanjutnya:"
+                            : "Anda perlu meningkatkan skor untuk melanjutkan. Silakan coba lagi atau keluar untuk mempelajari materi lebih lanjut."}
                         </p>
-                        <Button
-                          onClick={() => navigate("/results/final")}
-                          className="bg-primary hover:bg-primary/90"
-                        >
-                          Lihat Hasil Akhir
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
+                        <div className="flex gap-3">
+                          {isPassed && (
+                            <Button
+                              onClick={() => navigate("/assessment/stage3")}
+                              className="bg-gradient-primary hover:opacity-90 transition-opacity"
+                            >
+                              Lanjut ke Milestone B
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            onClick={() => navigate("/")}
+                          >
+                            Keluar
+                          </Button>
+                          {!isPassed && (
+                            <Button
+                              onClick={() => navigate("/assessment/stage2")}
+                              variant="secondary"
+                            >
+                              Coba Lagi
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* After Milestone B (Stage 3) - Auto redirect to final result */}
+                    {stage === 3 && (
+                      <div className="p-6 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 border rounded-xl">
+                        <h4 className="font-semibold text-foreground mb-3">
+                          Assessment Selesai
+                        </h4>
+                        <p className="text-muted-foreground mb-6">
+                          Anda telah menyelesaikan semua tahap assessment.
+                          Otomatis diarahkan ke halaman hasil final...
+                        </p>
+                        <div className="flex gap-3">
+                          <Button
+                            onClick={() => navigate("/final-result")}
+                            className="bg-gradient-primary hover:opacity-90 transition-opacity"
+                          >
+                            Lihat Hasil Final
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" onClick={downloadPDF}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Unduh PDF
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
-
-          {/* Eligibility Check */}
-          {stageNumber < 3 && !eligible && (
-            <Card className="border-orange-300 bg-orange-50">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-6 h-6 text-orange-600 mt-0.5" />
-                  <div>
-                    <h3 className="font-semibold text-orange-800">
-                      Catatan Penting
-                    </h3>
-                    <p className="text-sm text-orange-700 mt-1">
-                      Skor Anda saat ini belum mencapai target optimal untuk
-                      tahap ini. Namun, Anda masih dapat melanjutkan ke tahap
-                      berikutnya untuk pembelajaran berkelanjutan. Disarankan
-                      untuk mereview materi dan mencoba meningkatkan pemahaman.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Action Buttons */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {stageNumber < 3 ? (
-                  <Button
-                    onClick={handleNextStage}
-                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:opacity-90 transition-opacity text-white"
-                    size="lg"
-                  >
-                    <ArrowRight className="mr-2 h-5 w-5" />
-                    Lanjut ke Tahap {stageNumber + 1}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleNextStage}
-                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:opacity-90 transition-opacity text-white"
-                    size="lg"
-                  >
-                    <Trophy className="mr-2 h-5 w-5" />
-                    Lihat Hasil Akhir
-                  </Button>
-                )}
-
-                <Button
-                  onClick={() => navigate("/results/final")}
-                  variant="outline"
-                  size="lg"
-                  className="border-primary text-primary hover:bg-primary/10"
-                  disabled={stageNumber < 3}
-                >
-                  <Trophy className="mr-2 h-5 w-5" />
-                  Hasil Akhir
-                </Button>
-
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="lg">
-                      <Home className="mr-2 h-5 w-5" />
-                      Kembali ke Beranda
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Konfirmasi Keluar</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Apakah Anda yakin ingin kembali ke beranda? Progress
-                        Anda akan tersimpan dan dapat dilanjutkan nanti.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Batal</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleExit}>
-                        Ya, Kembali ke Beranda
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
-    </Layout>
+    </div>
   );
-};
-
-export default StageResult;
+}

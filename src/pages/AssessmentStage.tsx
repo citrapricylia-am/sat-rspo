@@ -3,7 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle,
+  BookOpen,
+  Target,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAssessment, Answer } from "@/contexts/AssessmentContext";
 import {
@@ -12,6 +19,7 @@ import {
   stage3Questions,
   Question,
 } from "@/data/questions";
+import { getQuestionPrincipleCriteria } from "@/data/principlesCriteria";
 import AssessmentQuestion from "@/components/AssessmentQuestion";
 import Layout from "@/components/Layout";
 import { useToast } from "@/hooks/use-toast";
@@ -191,12 +199,64 @@ const AssessmentStage = () => {
             </CardHeader>
           </Card>
 
+          {/* Principle & Criteria Context - Minimalist Design */}
+          {(() => {
+            const context = getQuestionPrincipleCriteria(currentQuestion.id);
+            if (!context) return null;
+
+            return (
+              <Card className="border border-border/50 bg-background/95 backdrop-blur">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    {/* Principle Section */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="h-4 w-4 text-primary" />
+                        <Badge variant="outline" className="text-xs">
+                          {context.principle.id.toUpperCase().replace("_", " ")}
+                        </Badge>
+                      </div>
+                      <h3 className="text-lg font-bold text-foreground">
+                        {context.principle.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {context.principle.description}
+                      </p>
+                    </div>
+
+                    {/* Separator */}
+                    <div className="h-px bg-border" />
+
+                    {/* Criteria Section */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Target className="h-3 w-3 text-secondary" />
+                        <Badge variant="secondary" className="text-xs">
+                          {context.criteria.id.toUpperCase().replace("_", " ")}
+                        </Badge>
+                      </div>
+                      <h4 className="text-sm text-foreground">
+                        {context.criteria.title}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        {context.criteria.description}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
           {/* Question */}
-          <AssessmentQuestion
-            question={currentQuestion}
-            answer={getCurrentAnswer()}
-            onAnswerChange={handleAnswerChange}
-          />
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-lg -z-10" />
+            <AssessmentQuestion
+              question={currentQuestion}
+              answer={getCurrentAnswer()}
+              onAnswerChange={handleAnswerChange}
+            />
+          </div>
 
           {/* Navigation */}
           <Card className="border-border shadow-subtle">

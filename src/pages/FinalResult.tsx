@@ -1,35 +1,12 @@
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useRef } from "react";
-import { Button } from "@/components/ui/button";
+import { useAssessment, Answer } from "@/contexts/AssessmentContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Home,
-  Download,
-  Share2,
-  Trophy,
-  Target,
-  TrendingUp,
-  Award,
-  RefreshCw,
-  CheckCircle,
-  XCircle,
-  Calendar,
-  User,
-  Mail,
-  Phone,
-  FileText,
-  Shield,
-  TrendingUp as TrendingUpIcon,
-  BarChart3,
-} from "lucide-react";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
 import {
   PieChart,
   Pie,
@@ -38,731 +15,448 @@ import {
   Bar,
   XAxis,
   YAxis,
-  ResponsiveContainer,
+  CartesianGrid,
+  Tooltip,
   Legend,
+  ResponsiveContainer,
 } from "recharts";
+import {
+  Trophy,
+  Download,
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  FileText,
+  BarChart3,
+  PieChartIcon,
+  User,
+} from "lucide-react";
+import {
+  principlesCriteria,
+  getQuestionPrincipleCriteria,
+} from "@/data/principlesCriteria";
+import {
+  stage1Questions,
+  stage2Questions,
+  stage3Questions,
+} from "@/data/questions";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { useAssessment } from "@/contexts/AssessmentContext";
-import { useAuth } from "@/contexts/AuthContext";
-import Layout from "@/components/Layout";
+import { useToast } from "@/hooks/use-toast";
 
-const FinalResult = () => {
-  const navigate = useNavigate();
-  const resultsRef = useRef<HTMLDivElement>(null);
-  const { getStageScore, getTotalScore, resetAssessment } = useAssessment();
+export default function FinalResult() {
+  const { assessmentData, getTotalScore, resetAssessment } = useAssessment();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const stage1Score = getStageScore(1);
-  const stage2Score = getStageScore(2);
-  const stage3Score = getStageScore(3);
+  const stage1Score = assessmentData.stage1.reduce(
+    (sum, answer) => sum + answer.score,
+    0
+  );
+  const stage2Score = assessmentData.stage2.reduce(
+    (sum, answer) => sum + answer.score,
+    0
+  );
+  const stage3Score = assessmentData.stage3.reduce(
+    (sum, answer) => sum + answer.score,
+    0
+  );
   const totalScore = getTotalScore();
 
-  // Mock max scores and categories
-  const maxScores = { stage1: 20, stage2: 30, stage3: 25 };
+  const maxScores = { stage1: 50, stage2: 30, stage3: 25 };
   const totalMaxScore = maxScores.stage1 + maxScores.stage2 + maxScores.stage3;
-  const totalPercentage = (totalScore / totalMaxScore) * 100;
-  const minimumPassScore = 55; // 55% minimum to pass
+  const totalPercentage = Math.round((totalScore / totalMaxScore) * 100);
+  const minimumPassScore = 60;
   const isPassed = totalPercentage >= minimumPassScore;
-
-  // Calculate percentile (mock data - in real app this would come from database)
   const percentile = Math.min(
     95,
     Math.max(5, Math.round(totalPercentage + Math.random() * 10))
   );
 
-  // Chart configurations
-  const chartConfig = {
-    score: {
-      label: "Skor",
-      color: "hsl(var(--primary))",
-    },
-    passed: {
-      label: "Lulus",
-      color: "hsl(var(--success))",
-    },
-    failed: {
-      label: "Tidak Lulus",
-      color: "hsl(var(--destructive))",
-    },
-    environment: {
-      label: "Lingkungan",
-      color: "hsl(142, 76%, 36%)",
-    },
-    social: {
-      label: "Sosial",
-      color: "hsl(217, 91%, 60%)",
-    },
-    economic: {
-      label: "Ekonomi",
-      color: "hsl(262, 83%, 58%)",
-    },
-  };
-
-  // Score distribution data
   const scoreDistributionData = [
-    {
-      name: "Skor Anda",
-      value: totalScore,
-      color: "hsl(var(--primary))",
-    },
-    {
-      name: "Sisa Skor",
-      value: totalMaxScore - totalScore,
-      color: "hsl(var(--muted))",
-    },
+    { name: "Skor Anda", value: totalScore, fill: "#22c55e" },
+    { name: "Sisa Skor", value: totalMaxScore - totalScore, fill: "#e5e7eb" },
   ];
 
-  // Category analysis data (mock - should come from actual question categorization)
   const categoryData = [
     {
-      category: "Lingkungan",
-      score: Math.round(stage1Score * 0.7),
-      maxScore: Math.round(maxScores.stage1 * 0.7),
-      percentage: Math.round(
-        ((stage1Score * 0.7) / (maxScores.stage1 * 0.7)) * 100
-      ),
+      category: "Eligibility",
+      score: stage1Score,
+      maxScore: maxScores.stage1,
+      percentage: Math.round((stage1Score / maxScores.stage1) * 100),
     },
     {
-      category: "Sosial",
-      score: Math.round(stage2Score * 0.8),
-      maxScore: Math.round(maxScores.stage2 * 0.8),
-      percentage: Math.round(
-        ((stage2Score * 0.8) / (maxScores.stage2 * 0.8)) * 100
-      ),
+      category: "Milestone A",
+      score: stage2Score,
+      maxScore: maxScores.stage2,
+      percentage: Math.round((stage2Score / maxScores.stage2) * 100),
     },
     {
-      category: "Ekonomi",
-      score: Math.round(stage3Score * 0.9),
-      maxScore: Math.round(maxScores.stage3 * 0.9),
-      percentage: Math.round(
-        ((stage3Score * 0.9) / (maxScores.stage3 * 0.9)) * 100
-      ),
+      category: "Milestone B",
+      score: stage3Score,
+      maxScore: maxScores.stage3,
+      percentage: Math.round((stage3Score / maxScores.stage3) * 100),
     },
   ];
 
-  const getOverallPerformance = (percentage: number) => {
-    if (percentage >= 85) {
-      return {
-        level: "Outstanding",
-        color: "bg-green-100 text-green-800 border-green-300",
-        description:
-          "Luar biasa! Anda siap untuk sertifikasi RSPO dan telah menunjukkan komitmen yang kuat terhadap praktik berkelanjutan.",
-        recommendations: [
-          "Pertahankan standar tinggi yang telah Anda capai",
-          "Berbagi pengetahuan dengan petani lain",
-          "Mulai proses sertifikasi RSPO resmi",
-          "Jadi mentor untuk petani lain di komunitas",
-        ],
-      };
-    } else if (percentage >= 70) {
-      return {
-        level: "Very Good",
-        color: "bg-blue-100 text-blue-800 border-blue-300",
-        description:
-          "Sangat baik! Anda memiliki pemahaman yang solid tentang praktik berkelanjutan dengan beberapa area untuk diperbaiki.",
-        recommendations: [
-          "Tingkatkan area yang masih lemah",
-          "Ikuti pelatihan lanjutan RSPO",
-          "Implementasikan praktik berkelanjutan yang belum diterapkan",
-          "Persiapkan dokumentasi untuk sertifikasi",
-        ],
-      };
-    } else if (percentage >= 55) {
-      return {
-        level: "Good",
-        color: "bg-yellow-100 text-yellow-800 border-yellow-300",
-        description:
-          "Baik! Anda sudah di jalur yang benar namun masih perlu peningkatan untuk mencapai standar RSPO.",
-        recommendations: [
-          "Fokus pada pelatihan di area yang lemah",
-          "Bergabung dengan kelompok tani berkelanjutan",
-          "Konsultasi dengan ahli RSPO",
-          "Buat rencana perbaikan bertahap",
-        ],
-      };
+  const getRecommendations = () => {
+    if (totalPercentage >= 85) {
+      return [
+        "Pertahankan standar tinggi yang telah Anda capai",
+        "Berbagi pengetahuan dengan petani lain",
+        "Mulai proses sertifikasi RSPO resmi",
+        "Jadi mentor untuk petani lain di komunitas",
+      ];
+    } else if (totalPercentage >= 70) {
+      return [
+        "Tingkatkan area yang masih lemah",
+        "Ikuti pelatihan lanjutan RSPO",
+        "Implementasikan praktik berkelanjutan yang belum diterapkan",
+        "Persiapkan dokumentasi untuk sertifikasi",
+      ];
+    } else if (totalPercentage >= 55) {
+      return [
+        "Fokus pada pelatihan di area yang lemah",
+        "Bergabung dengan kelompok tani berkelanjutan",
+        "Konsultasi dengan ahli RSPO",
+        "Buat rencana perbaikan bertahap",
+      ];
     } else {
-      return {
-        level: "Needs Development",
-        color: "bg-red-100 text-red-800 border-red-300",
-        description:
-          "Perlu pengembangan. Masih banyak area yang perlu dipelajari dan diperbaiki sebelum siap untuk sertifikasi RSPO.",
-        recommendations: [
-          "Ikuti pelatihan dasar RSPO secara menyeluruh",
-          "Mulai implementasi praktik berkelanjutan dasar",
-          "Cari mentor atau konsultan berpengalaman",
-          "Ulangi assessment setelah implementasi perbaikan",
-        ],
-      };
+      return [
+        "Ikuti pelatihan dasar RSPO secara menyeluruh",
+        "Mulai implementasi praktik berkelanjutan dasar",
+        "Cari mentor atau konsultan berpengalaman",
+        "Ulangi assessment setelah implementasi perbaikan",
+      ];
     }
   };
 
-  const performance = getOverallPerformance(totalPercentage);
+  const getAllQuestions = () => {
+    return [...stage1Questions, ...stage2Questions, ...stage3Questions];
+  };
 
-  const handleDownloadPDF = async () => {
-    if (!resultsRef.current) return;
+  const getAllAnswers = () => {
+    const allAnswers: { [key: string]: Answer } = {};
+    [
+      ...assessmentData.stage1,
+      ...assessmentData.stage2,
+      ...assessmentData.stage3,
+    ].forEach((answer) => {
+      allAnswers[answer.questionId] = answer;
+    });
+    return allAnswers;
+  };
 
+  const downloadPDF = async () => {
     try {
-      // Create a new div for PDF content
-      const pdfContent = document.createElement("div");
-      pdfContent.style.width = "800px";
-      pdfContent.style.padding = "20px";
-      pdfContent.style.backgroundColor = "white";
-      pdfContent.style.fontFamily = "Arial, sans-serif";
+      const jsPDFModule = await import("jspdf");
+      const doc = new jsPDFModule.default();
 
-      // Add content to PDF
-      pdfContent.innerHTML = `
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #16a34a; margin-bottom: 10px;">SAT RSPO PADI - Hasil Assessment</h1>
-          <p style="color: #666; font-size: 14px;">Tanggal: ${new Date().toLocaleDateString(
-            "id-ID"
-          )}</p>
-        </div>
-        
-        <div style="margin-bottom: 30px; padding: 20px; border: 2px solid #16a34a; border-radius: 8px;">
-          <h2 style="color: #16a34a; margin-bottom: 15px;">Informasi Peserta</h2>
-          <p><strong>Nama:</strong> ${user?.fullName || "N/A"}</p>
-          <p><strong>Email:</strong> ${user?.email || "N/A"}</p>
-          <p><strong>No. HP:</strong> ${user?.phone || "N/A"}</p>
-        </div>
+      // Header
+      doc.setFontSize(20);
+      doc.setFont(undefined, "bold");
+      doc.text("SAT RSPO PADI", 20, 30);
+      doc.text("Hasil Tes Akhir", 20, 45);
 
-        <div style="margin-bottom: 30px;">
-          <h2 style="color: #16a34a; margin-bottom: 15px;">Hasil Keseluruhan</h2>
-          <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-            <div style="font-size: 36px; font-weight: bold; color: #333; margin-bottom: 10px;">
-              ${totalScore} / ${totalMaxScore}
-            </div>
-            <div style="font-size: 18px; color: #666; margin-bottom: 10px;">
-              Persentase: ${Math.round(totalPercentage)}%
-            </div>
-            <div style="padding: 8px 16px; background: ${
-              isPassed ? "#dcfce7" : "#fef2f2"
-            }; 
-                        color: ${
-                          isPassed ? "#16a34a" : "#dc2626"
-                        }; border-radius: 20px; display: inline-block;">
-              ${isPassed ? "LULUS" : "TIDAK LULUS"}
-            </div>
-            <p style="margin-top: 15px; color: #666;">
-              Standar minimum: ${minimumPassScore}% | Persentil: ${percentile}%
-            </p>
-          </div>
-        </div>
+      // Line separator
+      doc.setLineWidth(0.5);
+      doc.line(20, 55, 190, 55);
 
-        <div style="margin-bottom: 30px;">
-          <h2 style="color: #16a34a; margin-bottom: 15px;">Detail Skor per Tahap</h2>
-          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-            <p><strong>Eligibility Test:</strong> ${stage1Score}/${
-        maxScores.stage1
-      } (${Math.round((stage1Score / maxScores.stage1) * 100)}%)</p>
-            <p><strong>Milestone A:</strong> ${stage2Score}/${
-        maxScores.stage2
-      } (${Math.round((stage2Score / maxScores.stage2) * 100)}%)</p>
-            <p><strong>Milestone B:</strong> ${stage3Score}/${
-        maxScores.stage3
-      } (${Math.round((stage3Score / maxScores.stage3) * 100)}%)</p>
-          </div>
-        </div>
+      // User Info
+      doc.setFontSize(12);
+      doc.setFont(undefined, "normal");
+      doc.text("INFORMASI PESERTA", 20, 70);
+      doc.text(`Nama: ${user?.email?.split("@")[0] || "N/A"}`, 20, 85);
+      doc.text(`Email: ${user?.email || "N/A"}`, 20, 95);
+      doc.text(`Nomor HP: N/A`, 20, 105);
+      doc.text(`Role: Peserta`, 20, 115);
 
-        <div style="margin-bottom: 30px;">
-          <h2 style="color: #16a34a; margin-bottom: 15px;">Analisis per Kategori</h2>
-          <p style="color: #666; margin-bottom: 15px;">
-            Grafik menunjukkan performa Anda di berbagai kategori penilaian RSPO:
-          </p>
-          ${categoryData
-            .map(
-              (cat) => `
-            <div style="margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
-              <strong>${cat.category}:</strong> ${cat.score}/${cat.maxScore} (${
-                cat.percentage
-              }%)
-              ${
-                cat.percentage >= 80
-                  ? " - Sangat Baik"
-                  : cat.percentage >= 60
-                  ? " - Baik"
-                  : " - Perlu Peningkatan"
-              }
-            </div>
-          `
-            )
-            .join("")}
-        </div>
+      // Line separator
+      doc.line(20, 125, 190, 125);
 
-        <div>
-          <h2 style="color: #16a34a; margin-bottom: 15px;">Rekomendasi</h2>
-          <p style="margin-bottom: 15px; color: #666;">${
-            performance.description
-          }</p>
-          <ul style="color: #666;">
-            ${performance.recommendations
-              .map((rec) => `<li style="margin-bottom: 8px;">${rec}</li>`)
-              .join("")}
-          </ul>
-        </div>
-      `;
+      // Results Summary
+      doc.setFontSize(14);
+      doc.setFont(undefined, "bold");
+      doc.text("RINGKASAN HASIL", 20, 140);
 
-      // Temporarily add to DOM for rendering
-      pdfContent.style.position = "absolute";
-      pdfContent.style.left = "-9999px";
-      document.body.appendChild(pdfContent);
+      doc.setFontSize(12);
+      doc.setFont(undefined, "normal");
+      doc.text(`Total Skor: ${totalScore} dari ${totalMaxScore}`, 20, 155);
+      doc.text(`Persentase: ${totalPercentage}%`, 20, 165);
 
-      // Convert to canvas
-      const canvas = await html2canvas(pdfContent, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-      });
+      // Pass/Fail status with styling
+      const status = totalPercentage >= 70 ? "LULUS" : "TIDAK LULUS";
+      doc.setFont(undefined, "bold");
+      doc.text(`Status: ${status}`, 20, 175);
 
-      // Remove from DOM
-      document.body.removeChild(pdfContent);
+      // Stage breakdown
+      doc.setFont(undefined, "normal");
+      doc.text("Breakdown per Tahap:", 20, 190);
+      doc.text(
+        `• Eligibility Test: ${stage1Score}/${maxScores.stage1} (${Math.round(
+          (stage1Score / maxScores.stage1) * 100
+        )}%)`,
+        25,
+        200
+      );
+      doc.text(
+        `• Milestone A: ${stage2Score}/${maxScores.stage2} (${Math.round(
+          (stage2Score / maxScores.stage2) * 100
+        )}%)`,
+        25,
+        210
+      );
+      doc.text(
+        `• Milestone B: ${stage3Score}/${maxScores.stage3} (${Math.round(
+          (stage3Score / maxScores.stage3) * 100
+        )}%)`,
+        25,
+        220
+      );
 
-      // Create PDF
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgData = canvas.toDataURL("image/png");
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
+      // Conclusion
+      doc.line(20, 235, 190, 235);
+      doc.setFontSize(12);
+      doc.setFont(undefined, "bold");
+      doc.text("KESIMPULAN", 20, 250);
 
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      doc.setFont(undefined, "normal");
+      let conclusion = "";
+      if (totalPercentage >= 90) {
+        conclusion =
+          "Excellent! Anda menunjukkan pemahaman yang sangat baik tentang standar RSPO.";
+      } else if (totalPercentage >= 80) {
+        conclusion =
+          "Baik! Anda memiliki pemahaman yang solid tentang standar RSPO dengan beberapa area untuk perbaikan.";
+      } else if (totalPercentage >= 70) {
+        conclusion =
+          "Cukup! Anda telah lulus dengan pemahaman dasar. Disarankan untuk memperdalam pengetahuan di beberapa area.";
+      } else {
+        conclusion =
+          "Belum Lulus. Disarankan untuk mempelajari kembali materi dan mengulang tes setelah persiapan lebih matang.";
       }
 
-      pdf.save(
-        `SAT-RSPO-PADI-Hasil-${
-          user?.fullName || "Assessment"
-        }-${new Date().toLocaleDateString("id-ID")}.pdf`
-      );
+      const conclusionLines = doc.splitTextToSize(conclusion, 170);
+      doc.text(conclusionLines, 20, 265);
+
+      // Footer
+      const currentDate = new Date().toLocaleDateString("id-ID");
+      doc.setFontSize(10);
+      doc.text(`Dokumen dibuat pada: ${currentDate}`, 20, 290);
+
+      doc.save("hasil-tes-sat-rspo.pdf");
+
+      toast({
+        title: "PDF Berhasil Diunduh",
+        description: "File PDF hasil tes telah tersimpan di perangkat Anda",
+      });
     } catch (error) {
       console.error("Error generating PDF:", error);
-      alert("Gagal mengunduh PDF. Silakan coba lagi.");
+      toast({
+        title: "Gagal Mengunduh PDF",
+        description: "Terjadi kesalahan saat membuat file PDF",
+        variant: "destructive",
+      });
     }
-  };
-
-  const handleRestart = () => {
-    resetAssessment();
-    navigate("/pretest");
-  };
-
-  const handleExit = () => {
-    navigate("/");
-  };
-
-  const getStagePercentage = (score: number, maxScore: number) => {
-    return (score / maxScore) * 100;
   };
 
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-8" ref={resultsRef}>
-        <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Award className="w-8 h-8 text-white" />
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4">
+              <Trophy className="h-8 w-8 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl font-bold text-green-600 mb-2">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
               Hasil Tes SAT RSPO PADI
             </h1>
             <p className="text-muted-foreground">
-              Selesai pada:{" "}
-              {new Date().toLocaleDateString("id-ID", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              Assessment selesai pada {new Date().toLocaleDateString("id-ID")}
             </p>
           </div>
 
-          {/* Main Score Cards - Top Row */}
+          {/* Score Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Total Score Card */}
-            <Card className="text-center border-2 border-primary/10">
-              <CardHeader className="pb-2">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <Shield className="w-6 h-6 text-primary" />
+            <Card className="text-center">
+              <CardHeader className="pb-3">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl mx-auto mb-2">
+                  <Trophy className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="text-lg font-medium text-muted-foreground">
+                <CardTitle className="text-lg text-muted-foreground">
                   Skor Total
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-bold text-green-600 mb-2">
+                <div className="text-4xl font-bold text-primary mb-2">
                   {totalScore}
                 </div>
                 <div className="text-muted-foreground">
                   dari {totalMaxScore}
                 </div>
                 <div className="mt-3">
-                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                    Excellent
+                  <Badge
+                    variant={
+                      totalPercentage >= 85
+                        ? "default"
+                        : totalPercentage >= 70
+                        ? "secondary"
+                        : "outline"
+                    }
+                  >
+                    {totalPercentage}%
                   </Badge>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Pass Status Card */}
-            <Card className="text-center border-2 border-primary/10">
-              <CardHeader className="pb-2">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+            <Card className="text-center">
+              <CardHeader className="pb-3">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl mx-auto mb-2">
                   {isPassed ? (
-                    <CheckCircle className="w-6 h-6 text-blue-600" />
+                    <CheckCircle className="h-6 w-6 text-green-600" />
                   ) : (
-                    <XCircle className="w-6 h-6 text-red-600" />
+                    <XCircle className="h-6 w-6 text-red-600" />
                   )}
                 </div>
-                <CardTitle className="text-lg font-medium text-muted-foreground">
-                  Tingkat Kelulusan
+                <CardTitle className="text-lg text-muted-foreground">
+                  Status Kelulusan
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div
                   className={`text-2xl font-bold mb-2 ${
-                    isPassed ? "text-blue-600" : "text-red-600"
+                    isPassed ? "text-green-600" : "text-red-600"
                   }`}
                 >
                   {isPassed ? "LULUS" : "TIDAK LULUS"}
                 </div>
                 <div className="text-muted-foreground">
-                  Standar minimum: {minimumPassScore}
+                  Min: {minimumPassScore}%
                 </div>
               </CardContent>
             </Card>
 
-            {/* Percentile Card */}
-            <Card className="text-center border-2 border-primary/10">
-              <CardHeader className="pb-2">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <TrendingUpIcon className="w-6 h-6 text-green-600" />
+            <Card className="text-center">
+              <CardHeader className="pb-3">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-xl mx-auto mb-2">
+                  <TrendingUp className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="text-lg font-medium text-muted-foreground">
+                <CardTitle className="text-lg text-muted-foreground">
                   Persentil
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-bold text-green-600 mb-2">
+                <div className="text-4xl font-bold text-primary mb-2">
                   {percentile}%
                 </div>
-                <div className="text-muted-foreground">
-                  Lebih baik dari peserta lain
-                </div>
+                <div className="text-muted-foreground">dari peserta lain</div>
               </CardContent>
             </Card>
           </div>
 
           {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Score Distribution Chart */}
+          <div
+            id="charts-section"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
+          >
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-primary" />
+                  <PieChartIcon className="h-5 w-5" />
                   Distribusi Skor
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={chartConfig} className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={scoreDistributionData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={120}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {scoreDistributionData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-                <div className="mt-4 flex justify-center">
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-500 rounded"></div>
-                      <span>Benar</span>
-                    </div>
-                  </div>
-                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={scoreDistributionData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={120}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {scoreDistributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
 
-            {/* Category Analysis */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  Analisis per Kategori
+                  <BarChart3 className="h-5 w-5" />
+                  Analisis Per Kategori
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={chartConfig} className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={categoryData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <XAxis
-                        dataKey="category"
-                        tick={{ fontSize: 12 }}
-                        interval={0}
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                      />
-                      <YAxis domain={[0, 100]} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar
-                        dataKey="percentage"
-                        fill="hsl(var(--primary))"
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={categoryData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="category" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="percentage" fill="#22c55e" />
+                  </BarChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
 
-          <Tabs defaultValue="breakdown" className="w-full">
+          {/* Download Button */}
+          <div className="flex justify-center mb-6">
+            <Button onClick={downloadPDF} size="lg" className="gap-2">
+              <Download className="h-5 w-5" />
+              Unduh Hasil PDF
+            </Button>
+          </div>
+
+          <Tabs defaultValue="detail" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="breakdown">Detail Skor</TabsTrigger>
+              <TabsTrigger value="detail">Detail</TabsTrigger>
               <TabsTrigger value="recommendations">Rekomendasi</TabsTrigger>
               <TabsTrigger value="navigation">Navigasi</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="breakdown" className="space-y-6">
-              <div className="grid lg:grid-cols-2 gap-6">
-                {/* Stage Breakdown */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="w-6 h-6 text-primary" />
-                      Detail Skor per Tahap
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Stage 1 */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="font-medium">Eligibility Test</span>
-                        <span className="font-semibold">
-                          {stage1Score} / {maxScores.stage1}
-                        </span>
-                      </div>
-                      <Progress
-                        value={getStagePercentage(
-                          stage1Score,
-                          maxScores.stage1
-                        )}
-                        className="h-3"
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        {Math.round(
-                          getStagePercentage(stage1Score, maxScores.stage1)
-                        )}
-                        % - Kelayakan dasar untuk sertifikasi
-                      </p>
-                    </div>
-
-                    {/* Stage 2 */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="font-medium">Milestone A</span>
-                        <span className="font-semibold">
-                          {stage2Score} / {maxScores.stage2}
-                        </span>
-                      </div>
-                      <Progress
-                        value={getStagePercentage(
-                          stage2Score,
-                          maxScores.stage2
-                        )}
-                        className="h-3"
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        {Math.round(
-                          getStagePercentage(stage2Score, maxScores.stage2)
-                        )}
-                        % - Praktik pengelolaan berkelanjutan
-                      </p>
-                    </div>
-
-                    {/* Stage 3 */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="font-medium">Milestone B</span>
-                        <span className="font-semibold">
-                          {stage3Score} / {maxScores.stage3}
-                        </span>
-                      </div>
-                      <Progress
-                        value={getStagePercentage(
-                          stage3Score,
-                          maxScores.stage3
-                        )}
-                        className="h-3"
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        {Math.round(
-                          getStagePercentage(stage3Score, maxScores.stage3)
-                        )}
-                        % - Implementasi keberlanjutan lanjutan
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Category Breakdown */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="w-6 h-6 text-primary" />
-                      Analisis per Kategori
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {categoryData.map((category, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="font-medium">
-                            {category.category}
-                          </span>
-                          <span className="font-semibold">
-                            {category.score} / {category.maxScore}
-                          </span>
-                        </div>
-                        <Progress value={category.percentage} className="h-2" />
-                        <p className="text-sm text-muted-foreground">
-                          {category.percentage}% -{" "}
-                          {category.percentage >= 80
-                            ? "Sangat Baik"
-                            : category.percentage >= 60
-                            ? "Baik"
-                            : "Perlu Peningkatan"}
-                        </p>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="charts" className="space-y-6">
-              <div className="grid lg:grid-cols-2 gap-6">
-                {/* Score Distribution Chart */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Distribusi Skor</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Visualisasi pencapaian skor Anda dari total maksimal
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={scoreDistributionData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={120}
-                            paddingAngle={5}
-                            dataKey="value"
-                          >
-                            {scoreDistributionData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-
-                {/* Category Analysis Chart */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Analisis per Kategori</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Perbandingan performa di berbagai aspek penilaian RSPO
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={categoryData}>
-                          <XAxis dataKey="category" />
-                          <YAxis />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar
-                            dataKey="percentage"
-                            fill="hsl(var(--primary))"
-                            radius={[4, 4, 0, 0]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Chart Explanations */}
+            <TabsContent value="detail" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Penjelasan Grafik</CardTitle>
+                  <CardTitle>Detail Skor per Tahap</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold mb-2">Distribusi Skor:</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Grafik donut menunjukkan proporsi skor yang Anda peroleh (
-                      {totalScore}) dari total maksimal ({totalMaxScore}). Area
-                      hijau menunjukkan pencapaian Anda, sedangkan area abu-abu
-                      adalah skor yang belum tercapai.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">
-                      Analisis per Kategori:
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      Grafik batang menampilkan persentase pencapaian di setiap
-                      kategori RSPO.
-                      {categoryData.find((c) => c.percentage >= 80)
-                        ? ` Kategori ${
-                            categoryData.find((c) => c.percentage >= 80)
-                              ?.category
-                          } menunjukkan performa terbaik.`
-                        : " Semua kategori memerlukan peningkatan untuk mencapai standar optimal."}
-                      {categoryData.find((c) => c.percentage < 60)
-                        ? ` Fokus perbaikan diperlukan pada kategori ${
-                            categoryData.find((c) => c.percentage < 60)
-                              ?.category
-                          }.`
-                        : ""}
-                    </p>
+                <CardContent>
+                  <div className="space-y-4">
+                    {categoryData.map((category, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-4 bg-muted/50 rounded-lg"
+                      >
+                        <div>
+                          <h4 className="font-medium">{category.category}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {category.score} dari {category.maxScore} poin
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold">
+                            {category.percentage}%
+                          </div>
+                          <Progress
+                            value={category.percentage}
+                            className="w-20"
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -771,95 +465,68 @@ const FinalResult = () => {
             <TabsContent value="recommendations" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-6 h-6 text-primary" />
-                    Rekomendasi Pengembangan
-                  </CardTitle>
-                  <p className="text-muted-foreground">
-                    {performance.description}
-                  </p>
+                  <CardTitle>Rekomendasi Pengembangan</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4">
-                    {performance.recommendations.map(
-                      (recommendation, index) => (
-                        <div
-                          key={index}
-                          className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg"
-                        >
-                          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-semibold text-primary-foreground">
-                              {index + 1}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium">{recommendation}</p>
-                          </div>
+                  <div className="space-y-4">
+                    {getRecommendations().map((recommendation, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg"
+                      >
+                        <div className="flex-shrink-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs font-medium">
+                          {index + 1}
                         </div>
-                      )
-                    )}
+                        <p className="text-sm">{recommendation}</p>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
-          </Tabs>
 
-          {/* Actions */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <TabsContent value="navigation" className="space-y-4">
+              <div className="grid gap-4">
                 <Button
-                  onClick={handleDownloadPDF}
-                  size="lg"
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <FileText className="mr-2 h-5 w-5" />
-                  Unduh Hasil PDF
-                </Button>
-
-                <Button
-                  onClick={handleRestart}
                   variant="outline"
-                  size="lg"
-                  className="border-primary text-primary hover:bg-primary/10"
+                  onClick={() => navigate("/stage-result?stage=1")}
+                  className="w-full justify-start"
                 >
-                  <RefreshCw className="mr-2 h-5 w-5" />
-                  Ulangi Assessment
+                  <FileText className="mr-2 h-4 w-4" />
+                  Lihat Hasil Eligibility Test
                 </Button>
-
                 <Button
+                  variant="outline"
+                  onClick={() => navigate("/stage-result?stage=2")}
+                  className="w-full justify-start"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Lihat Hasil Milestone A
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/stage-result?stage=3")}
+                  className="w-full justify-start"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Lihat Hasil Milestone B
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({
-                        title: "Hasil SAT RSPO PADI",
-                        text: `Saya telah menyelesaikan Self Assessment Tool RSPO dengan skor ${totalScore}/${totalMaxScore} (${Math.round(
-                          totalPercentage
-                        )}%)`,
-                      });
-                    }
+                    resetAssessment();
+                    navigate("/");
                   }}
-                  variant="outline"
-                  size="lg"
+                  className="w-full justify-start"
                 >
-                  <Share2 className="mr-2 h-5 w-5" />
-                  Bagikan Hasil
-                </Button>
-
-                <Button
-                  onClick={handleExit}
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:opacity-90 transition-opacity text-white"
-                  size="lg"
-                >
-                  <Home className="mr-2 h-5 w-5" />
-                  Kembali ke Beranda
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  Mulai Tes Baru
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
-    </Layout>
+    </div>
   );
-};
-
-export default FinalResult;
+}
