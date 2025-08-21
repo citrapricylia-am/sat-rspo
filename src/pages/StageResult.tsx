@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useEffect, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAssessment, Answer } from "@/contexts/AssessmentContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,29 +40,61 @@ import {
   stage2Questions,
   stage3Questions,
 } from "@/data/questions";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { api } from "@/lib/api";
 
 export default function StageResult() {
-  const [searchParams] = useSearchParams();
-  const stage = parseInt(searchParams.get("stage") || "1");
-  const { assessmentData, getStageScore, isEligibleForNextStage } =
+  const { stage: stageParam } = useParams<{ stage: string }>();
+  const stage = parseInt(stageParam?.replace("stage", "") || "1");
+  const { assessmentData, getStageScore, getStageMaxScore, isEligibleForNextStage } =
     useAssessment();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const hasSavedRef = useRef(false);
 
   const score = getStageScore(stage as 1 | 2 | 3);
-  const maxScores = { 1: 50, 2: 30, 3: 25 };
-  const maxScore = maxScores[stage as keyof typeof maxScores];
-  const percentage = Math.round((score / maxScore) * 100);
+  const maxScore = getStageMaxScore(stage as 1 | 2 | 3);
+  const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
   const minimumPassScore = 60;
   const isPassed = percentage >= minimumPassScore;
   const percentile = Math.min(
     95,
     Math.max(5, Math.round(percentage + Math.random() * 10))
   );
+
+  useEffect(() => {
+    if (!user || hasSavedRef.current) return;
+    const answers = stage === 1 ? assessmentData.stage1 : stage === 2 ? assessmentData.stage2 : assessmentData.stage3;
+    if (answers.length === 0) return; // nothing to save
+
+    (async () => {
+      try {
+        await api.saveAssessment({
+          userId: user.id,
+          stage: stage as 1 | 2 | 3,
+          answers,
+          totalScore: score,
+          maxScore,
+          percentage,
+        });
+        hasSavedRef.current = true;
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [user, stage, assessmentData, score, maxScore, percentage]);
 
   const getStageTitle = () => {
     switch (stage) {
@@ -77,25 +109,18 @@ export default function StageResult() {
     }
   };
 
-  const getNextStageTitle = () => {
-    switch (stage) {
-      case 1:
-        return "Milestone A";
-      case 2:
-        return "Milestone B";
-      case 3:
-        return "Final Result";
-      default:
-        return "Next Stage";
-    }
-  };
-
-  const handleNextStage = () => {
-    if (stage < 3) {
-      navigate(`/assessment/stage${stage + 1}`);
+  const handleContinue = () => {
+    if (stage === 1) {
+      navigate("/milestone-a");
+    } else if (stage === 2) {
+      navigate("/milestone-b");
     } else {
       navigate("/final-result");
     }
+  };
+
+  const handleConfirmExit = () => {
+    navigate("/home");
   };
 
   const getRecommendations = () => {
@@ -153,97 +178,11 @@ export default function StageResult() {
     return stageAnswers;
   };
 
-  const downloadPDF = async () => {
-    try {
-      const jsPDFModule = await import("jspdf");
-      const doc = new jsPDFModule.default();
-
-      // Header
-      doc.setFontSize(20);
-      doc.setFont(undefined, "bold");
-      doc.text("SAT RSPO PADI", 20, 30);
-      doc.text(`Hasil ${getStageTitle()}`, 20, 45);
-
-      // Line separator
-      doc.setLineWidth(0.5);
-      doc.line(20, 55, 190, 55);
-
-      // User Info
-      doc.setFontSize(12);
-      doc.setFont(undefined, "normal");
-      doc.text("INFORMASI PESERTA", 20, 70);
-      doc.text(`Nama: ${user?.email?.split("@")[0] || "N/A"}`, 20, 85);
-      doc.text(`Email: ${user?.email || "N/A"}`, 20, 95);
-      doc.text(`Nomor HP: N/A`, 20, 105);
-      doc.text(`Role: Peserta`, 20, 115);
-
-      // Line separator
-      doc.line(20, 125, 190, 125);
-
-      // Results Summary
-      doc.setFontSize(14);
-      doc.setFont(undefined, "bold");
-      doc.text("RINGKASAN HASIL", 20, 140);
-
-      doc.setFontSize(12);
-      doc.setFont(undefined, "normal");
-      doc.text(`Skor: ${score} dari ${maxScore}`, 20, 155);
-      doc.text(`Persentase: ${percentage}%`, 20, 165);
-
-      // Pass/Fail status with styling
-      const status = percentage >= 70 ? "LULUS" : "TIDAK LULUS";
-      doc.setFont(undefined, "bold");
-      doc.text(`Status: ${status}`, 20, 175);
-
-      // Conclusion
-      doc.line(20, 190, 190, 190);
-      doc.setFontSize(12);
-      doc.setFont(undefined, "bold");
-      doc.text("KESIMPULAN", 20, 205);
-
-      doc.setFont(undefined, "normal");
-      let conclusion = "";
-      if (percentage >= 90) {
-        conclusion = `Excellent! Anda menunjukkan pemahaman yang sangat baik pada tahap ${getStageTitle()}.`;
-      } else if (percentage >= 80) {
-        conclusion = `Baik! Anda memiliki pemahaman yang solid pada tahap ${getStageTitle()} dengan beberapa area untuk perbaikan.`;
-      } else if (percentage >= 70) {
-        conclusion = `Cukup! Anda telah lulus tahap ${getStageTitle()} dengan pemahaman dasar.`;
-      } else {
-        conclusion = `Belum Lulus tahap ${getStageTitle()}. Disarankan untuk mempelajari kembali materi terkait.`;
-      }
-
-      const conclusionLines = doc.splitTextToSize(conclusion, 170);
-      doc.text(conclusionLines, 20, 220);
-
-      // Footer
-      const currentDate = new Date().toLocaleDateString("id-ID");
-      doc.setFontSize(10);
-      doc.text(`Dokumen dibuat pada: ${currentDate}`, 20, 250);
-
-      doc.save(
-        `hasil-${getStageTitle().toLowerCase().replace(/\s+/g, "-")}.pdf`
-      );
-
-      toast({
-        title: "PDF Berhasil Diunduh",
-        description: "File PDF hasil tes telah tersimpan di perangkat Anda",
-      });
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast({
-        title: "Gagal Mengunduh PDF",
-        description: "Terjadi kesalahan saat membuat file PDF",
-        variant: "destructive",
-      });
-    }
-  };
-
   // Auto-redirect for Stage 3 (Milestone B) after 3 seconds
   useEffect(() => {
     if (stage === 3) {
       const timer = setTimeout(() => {
-        navigate("/final-result");
+        navigate("/results/final");
       }, 3000);
 
       return () => clearTimeout(timer);
@@ -349,6 +288,41 @@ export default function StageResult() {
             </Card>
           </div>
 
+          {/* Primary Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mb-8">
+            <Button
+              onClick={handleContinue}
+              size="lg"
+              aria-label="Lanjut ke soal berikutnya"
+              className="bg-gradient-primary hover:opacity-90 transition-opacity rounded-xl"
+            >
+              Lanjut ke Soal Berikutnya
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="lg" className="rounded-xl">
+                  Keluar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent role="dialog">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Konfirmasi Keluar</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Apakah Anda yakin tidak ingin melanjutkan mengerjakan soal?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleConfirmExit}>
+                    Ya, Keluar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
           {/* Charts Section */}
           <div
             id="charts-section"
@@ -407,19 +381,11 @@ export default function StageResult() {
             </Card>
           </div>
 
-          {/* Download Button */}
-          <div className="flex justify-center mb-6">
-            <Button onClick={downloadPDF} size="lg" className="gap-2">
-              <Download className="h-5 w-5" />
-              Unduh Hasil PDF
-            </Button>
-          </div>
-
+          {/* Detail and Recommendations */}
           <Tabs defaultValue="detail" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="detail">Detail</TabsTrigger>
               <TabsTrigger value="recommendations">Rekomendasi</TabsTrigger>
-              <TabsTrigger value="navigation">Navigasi</TabsTrigger>
             </TabsList>
 
             <TabsContent value="detail" className="space-y-6">
@@ -450,9 +416,7 @@ export default function StageResult() {
 
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="font-medium">
-                          Persentase Pencapaian
-                        </span>
+                        <span className="font-medium">Persentase Pencapaian</span>
                         <span className="font-semibold">{percentage}%</span>
                       </div>
                       <Progress value={percentage} className="h-3" />
@@ -493,125 +457,6 @@ export default function StageResult() {
                         <p className="text-sm">{recommendation}</p>
                       </div>
                     ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="navigation" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Langkah Selanjutnya</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {/* After Eligibility Test (Stage 1) */}
-                    {stage === 1 && (
-                      <div className="p-6 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 border rounded-xl">
-                        <h4 className="font-semibold text-foreground mb-3">
-                          {isPassed
-                            ? "Selamat! Eligibility Test Selesai"
-                            : "Eligibility Test Belum Lulus"}
-                        </h4>
-                        <p className="text-muted-foreground mb-6">
-                          {isPassed
-                            ? "Anda telah berhasil menyelesaikan Eligibility Test. Pilih langkah selanjutnya:"
-                            : "Anda perlu meningkatkan skor untuk melanjutkan. Silakan coba lagi atau keluar untuk mempelajari materi lebih lanjut."}
-                        </p>
-                        <div className="flex gap-3">
-                          {isPassed && (
-                            <Button
-                              onClick={() => navigate("/assessment/stage2")}
-                              className="bg-gradient-primary hover:opacity-90 transition-opacity"
-                            >
-                              Lanjut ke Milestone A
-                              <ArrowRight className="ml-2 h-4 w-4" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="outline"
-                            onClick={() => navigate("/")}
-                          >
-                            Keluar
-                          </Button>
-                          {!isPassed && (
-                            <Button
-                              onClick={() => navigate("/assessment/stage1")}
-                              variant="secondary"
-                            >
-                              Coba Lagi
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* After Milestone A (Stage 2) */}
-                    {stage === 2 && (
-                      <div className="p-6 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 border rounded-xl">
-                        <h4 className="font-semibold text-foreground mb-3">
-                          {isPassed
-                            ? "Selamat! Milestone A Selesai"
-                            : "Milestone A Belum Lulus"}
-                        </h4>
-                        <p className="text-muted-foreground mb-6">
-                          {isPassed
-                            ? "Anda telah berhasil menyelesaikan Milestone A. Pilih langkah selanjutnya:"
-                            : "Anda perlu meningkatkan skor untuk melanjutkan. Silakan coba lagi atau keluar untuk mempelajari materi lebih lanjut."}
-                        </p>
-                        <div className="flex gap-3">
-                          {isPassed && (
-                            <Button
-                              onClick={() => navigate("/assessment/stage3")}
-                              className="bg-gradient-primary hover:opacity-90 transition-opacity"
-                            >
-                              Lanjut ke Milestone B
-                              <ArrowRight className="ml-2 h-4 w-4" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="outline"
-                            onClick={() => navigate("/")}
-                          >
-                            Keluar
-                          </Button>
-                          {!isPassed && (
-                            <Button
-                              onClick={() => navigate("/assessment/stage2")}
-                              variant="secondary"
-                            >
-                              Coba Lagi
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* After Milestone B (Stage 3) - Auto redirect to final result */}
-                    {stage === 3 && (
-                      <div className="p-6 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 border rounded-xl">
-                        <h4 className="font-semibold text-foreground mb-3">
-                          Assessment Selesai
-                        </h4>
-                        <p className="text-muted-foreground mb-6">
-                          Anda telah menyelesaikan semua tahap assessment.
-                          Otomatis diarahkan ke halaman hasil final...
-                        </p>
-                        <div className="flex gap-3">
-                          <Button
-                            onClick={() => navigate("/final-result")}
-                            className="bg-gradient-primary hover:opacity-90 transition-opacity"
-                          >
-                            Lihat Hasil Final
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" onClick={downloadPDF}>
-                            <Download className="mr-2 h-4 w-4" />
-                            Unduh PDF
-                          </Button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -201,7 +201,10 @@ const AssessmentStage = () => {
 
           {/* Principle & Criteria Context - Minimalist Design */}
           {(() => {
-            const context = getQuestionPrincipleCriteria(currentQuestion.id);
+            const context = getQuestionPrincipleCriteria(currentQuestion.id, {
+              role: user?.role as "petani" | "manajer" | undefined,
+              stage: stageNumber,
+            });
             if (!context) return null;
 
             return (
@@ -212,9 +215,6 @@ const AssessmentStage = () => {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <BookOpen className="h-4 w-4 text-primary" />
-                        <Badge variant="outline" className="text-xs">
-                          {context.principle.id.toUpperCase().replace("_", " ")}
-                        </Badge>
                       </div>
                       <h3 className="text-lg font-bold text-foreground">
                         {context.principle.title}
@@ -231,12 +231,9 @@ const AssessmentStage = () => {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Target className="h-3 w-3 text-secondary" />
-                        <Badge variant="secondary" className="text-xs">
-                          {context.criteria.id.toUpperCase().replace("_", " ")}
-                        </Badge>
                       </div>
                       <h4 className="text-sm text-foreground">
-                        {context.criteria.title}
+                        {context.criteria.displayTitle || context.criteria.title}
                       </h4>
                       <p className="text-xs text-muted-foreground">
                         {context.criteria.description}
