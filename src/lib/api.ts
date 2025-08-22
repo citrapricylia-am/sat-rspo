@@ -7,7 +7,7 @@ export interface ApiUser {
 	role: 'petani' | 'manajer';
 }
 
-const base = (import.meta as any).env?.VITE_API_BASE ?? '/api';
+const base = 'https://sefl-assessment-tools-rspo.wuaze.com/api';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
 	const res = await fetch(`${base}${path}`, {

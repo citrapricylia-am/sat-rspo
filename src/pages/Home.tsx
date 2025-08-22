@@ -1,40 +1,55 @@
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Users, Award, Leaf } from 'lucide-react';
-import Layout from '@/components/Layout';
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { CheckCircle, Users, Award, Leaf } from "lucide-react";
+import Layout from "@/components/Layout";
 
 const Home = () => {
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-16 sm:py-20">
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <div className="mb-8">
+        <div className="text-center mb-20">
+          <div className="mb-10">
             <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-green">
               <Leaf className="w-10 h-10 text-primary-foreground" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               SAT RSPO PADI
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Self Assessment Tool untuk membantu petani dan manajer kelapa sawit 
-              mengevaluasi praktik berkelanjutan sesuai standar RSPO
+            <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+              Self Assessment Tool untuk membantu petani dan manajer kelapa
+              sawit mengevaluasi praktik berkelanjutan sesuai standar RSPO
             </p>
           </div>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-green">
+
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <Button
+              asChild
+              size="lg"
+              className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-green"
+            >
               <Link to="/login">Masuk</Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="border-primary text-primary hover:bg-primary/10">
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="border-primary text-primary hover:bg-primary/10"
+            >
               <Link to="/register">Daftar Sekarang</Link>
             </Button>
           </div>
         </div>
 
         {/* Features Section */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <div className="grid md:grid-cols-3 gap-10 mb-20">
           <Card className="border-border shadow-subtle hover:shadow-green transition-all duration-300">
             <CardHeader className="text-center">
               <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center mx-auto mb-4">
@@ -44,7 +59,8 @@ const Home = () => {
             </CardHeader>
             <CardContent>
               <CardDescription className="text-center">
-                Evaluasi komprehensif melalui 3 tahap: Eligibility Test, Milestone A, dan Milestone B
+                Evaluasi komprehensif melalui 3 tahap: Eligibility Test,
+                Milestone A, dan Milestone B
               </CardDescription>
             </CardContent>
           </Card>
@@ -58,7 +74,8 @@ const Home = () => {
             </CardHeader>
             <CardContent>
               <CardDescription className="text-center">
-                Disesuaikan untuk kebutuhan Petani dan Manajer dengan pertanyaan yang relevan
+                Disesuaikan untuk kebutuhan Petani dan Manajer dengan pertanyaan
+                yang relevan
               </CardDescription>
             </CardContent>
           </Card>
@@ -72,7 +89,8 @@ const Home = () => {
             </CardHeader>
             <CardContent>
               <CardDescription className="text-center">
-                Dapatkan skor, persentase, dan rekomendasi untuk meningkatkan praktik berkelanjutan
+                Dapatkan skor, persentase, dan rekomendasi untuk meningkatkan
+                praktik berkelanjutan
               </CardDescription>
             </CardContent>
           </Card>
@@ -81,13 +99,16 @@ const Home = () => {
         {/* About Section */}
         <Card className="bg-gradient-secondary border-border shadow-subtle">
           <CardHeader>
-            <CardTitle className="text-2xl text-center mb-4">Tentang RSPO</CardTitle>
+            <CardTitle className="text-2xl text-center mb-6">
+              Tentang RSPO
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-center">
             <CardDescription className="text-base max-w-3xl mx-auto">
-              Roundtable on Sustainable Palm Oil (RSPO) adalah organisasi global yang mengembangkan 
-              dan mengimplementasikan standar berkelanjutan untuk industri minyak kelapa sawit. 
-              Tool ini membantu Anda mengevaluasi kesiapan untuk sertifikasi RSPO.
+              Roundtable on Sustainable Palm Oil (RSPO) adalah organisasi global
+              yang mengembangkan dan mengimplementasikan standar berkelanjutan
+              untuk industri minyak kelapa sawit. Tool ini membantu Anda
+              mengevaluasi kesiapan untuk sertifikasi RSPO.
             </CardDescription>
           </CardContent>
         </Card>
