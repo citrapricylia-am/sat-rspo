@@ -1,5 +1,9 @@
 <?php
 require_once __DIR__ . '/config.php';
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: https://sat-rspo.vercel.app'); // frontend Vercel
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 
 $method = $_SERVER['REQUEST_METHOD'];
 

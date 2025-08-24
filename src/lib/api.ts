@@ -9,6 +9,7 @@ export interface ApiUser {
 
 const base = 'https://sefl-assessment-tools-rspo.wuaze.com/api';
 
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
 	const res = await fetch(`${base}${path}`, {
 		headers: { 'Content-Type': 'application/json' },
