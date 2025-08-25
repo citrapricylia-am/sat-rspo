@@ -1,4 +1,10 @@
--- Minimal SAT RSPO PADI Database Schema for Immediate Deployment
+-- Create essential types
+CREATE TYPE user_role AS ENUM ('petani', 'manajer');
+
+-- Essential User Profiles Table
+CREATE TABLE IF NOT EXISTS user_profiles (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE NO-- Minimal SAT RSPO PADI Database Schema for Immediate Deployment
 -- Deploy this via Supabase SQL Editor first
 
 -- Create essential types
