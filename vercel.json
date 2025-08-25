@@ -11,8 +11,12 @@
           "target": "es2020",
           "moduleResolution": "node",
           "esModuleInterop": true,
-          "allowSyntheticDefaultImports": true
-        }
+          "allowSyntheticDefaultImports": true,
+          "skipLibCheck": true,
+          "forceConsistentCasingInFileNames": true
+        },
+        "excludeFiles": ["**/*.mjs", "**/*.esm.js"],
+        "zeroConfig": false
       }
     }
   ],
@@ -24,7 +28,12 @@
   ],
   "functions": {
     "api/**/*.ts": {
-      "runtime": "nodejs18.x"
+      "runtime": "nodejs18.x",
+      "memory": 1024,
+      "maxDuration": 10
     }
+  },
+  "env": {
+    "NODE_ENV": "production"
   }
 }

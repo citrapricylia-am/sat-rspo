@@ -1,0 +1,8 @@
+# Force Rebuild Marker
+
+This file exists to force Vercel to do a complete rebuild with the new CommonJS configuration.
+
+Build timestamp: 2025-08-25T08:46:00Z
+Configuration: CommonJS API functions
+Issue: Persistent ES module scope error
+Solution: Multi-layered CommonJS enforcement

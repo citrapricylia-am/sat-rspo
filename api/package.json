@@ -1,3 +1,7 @@
 {
-  "type": "commonjs"
+  "type": "commonjs",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

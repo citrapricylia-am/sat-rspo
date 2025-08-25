@@ -4,6 +4,9 @@ dev-*.mjs
 simple-dev-server.mjs
 api-server.mjs
 
+# Build markers
+.rebuild-marker
+
 # Test files
 test/
 
