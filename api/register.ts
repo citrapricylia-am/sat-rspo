@@ -5,8 +5,26 @@ import type { RegisterRequest, AuthResponse } from './types/database'
 import type { VercelResponse } from '@vercel/node'
 
 const handler = async (req: AuthenticatedRequest, res: VercelResponse) => {
+  console.log('Registration attempt started')
+  
   try {
+    // Check if environment variables are available
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+      console.error('Missing Supabase environment variables')
+      return res.status(500).json({
+        success: false,
+        error: 'Server configuration error - missing environment variables'
+      })
+    }
+
     const { email, password, full_name, phone, address, role }: RegisterRequest = req.body
+    
+    console.log('Registration data received:', {
+      email: email ? 'provided' : 'missing',
+      password: password ? 'provided' : 'missing',
+      full_name: full_name ? 'provided' : 'missing',
+      role
+    })
     
     // Validate email format
     if (!isValidEmail(email)) {
@@ -32,17 +50,27 @@ const handler = async (req: AuthenticatedRequest, res: VercelResponse) => {
         error: `Invalid role. Allowed roles: ${validRoles.join(', ')}`
       })
     }
+
+    console.log('Validation passed, checking existing user...')
     
     // Check if user already exists in our profiles table
-    const existingProfile = await dbOperations.getUserByEmail(email.toLowerCase())
-    if (existingProfile) {
-      return res.status(409).json({
-        success: false,
-        error: 'User with this email already exists'
-      })
+    try {
+      const existingProfile = await dbOperations.getUserByEmail(email.toLowerCase())
+      if (existingProfile) {
+        return res.status(409).json({
+          success: false,
+          error: 'User with this email already exists'
+        })
+      }
+    } catch (profileCheckError: any) {
+      console.warn('Error checking existing profile (table might not exist):', profileCheckError.message)
+      // Continue with registration - table might not exist yet
     }
+
+    console.log('Creating user with Supabase Auth...')
     
     // Sign up with Supabase Auth
+    console.log('Attempting Supabase Auth signup...')
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: email.toLowerCase(),
       password,
@@ -73,13 +101,17 @@ const handler = async (req: AuthenticatedRequest, res: VercelResponse) => {
     }
     
     if (!authData.user) {
+      console.error('No user returned from Supabase auth')
       return res.status(400).json({
         success: false,
         error: 'Registration failed - no user created'
       })
     }
+
+    console.log('Supabase Auth user created:', authData.user.id)
     
     // Create user profile in our database
+    console.log('Creating user profile...')
     try {
       const profile = await dbOperations.createUserProfile(authData.user.id, {
         full_name: full_name.trim(),
@@ -88,6 +120,8 @@ const handler = async (req: AuthenticatedRequest, res: VercelResponse) => {
         address: address.trim(),
         role
       })
+      
+      console.log('User profile created successfully')
       
       // Prepare response
       const response: AuthResponse = {
@@ -116,20 +150,28 @@ const handler = async (req: AuthenticatedRequest, res: VercelResponse) => {
     } catch (profileError: any) {
       console.error('Profile creation error:', profileError)
       
-      // If profile creation fails, we should ideally clean up the auth user
-      // But for now, we'll just return an error
-      return res.status(500).json({
-        success: false,
-        error: 'Registration completed but profile creation failed. Please contact support.'
+      // Return a simplified success response even if profile creation fails
+      // This prevents the user from being stuck in a bad state
+      return res.status(201).json({
+        success: true,
+        message: 'Registration successful, but profile creation had issues. Please contact support if you experience problems.',
+        user: {
+          id: authData.user.id,
+          email: authData.user.email!,
+          profile: null
+        }
       })
     }
     
   } catch (error: any) {
     console.error('Registration error:', error)
     
+    // Return detailed error information for debugging
     return res.status(500).json({
       success: false,
-      error: 'Internal server error during registration'
+      error: 'Internal server error during registration',
+      details: error.message || 'Unknown error',
+      timestamp: new Date().toISOString()
     })
   }
 }

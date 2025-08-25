@@ -1,33 +1,50 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database, UserProfile, Assessment, LoginHistory } from '../types/database'
 
-// Supabase configuration
-const supabaseUrl = process.env.SUPABASE_URL!
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!
+// Supabase configuration with better error handling
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please check SUPABASE_URL and SUPABASE_ANON_KEY.')
+  console.error('Missing Supabase environment variables:', {
+    hasUrl: !!supabaseUrl,
+    hasAnonKey: !!supabaseAnonKey,
+    hasServiceKey: !!supabaseServiceKey
+  })
+  throw new Error('Missing required Supabase environment variables. Check SUPABASE_URL and SUPABASE_ANON_KEY in Vercel dashboard.')
 }
 
-// Create Supabase client for public operations
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false
-  }
-})
+let supabase: any
+let supabaseAdmin: any
 
-// Create admin client for server-side operations (if service key is available)
-export const supabaseAdmin = supabaseServiceKey 
-  ? createClient<Database>(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
-  : null
+try {
+  // Create Supabase client for public operations
+  supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false
+    }
+  })
+
+  // Create admin client for server-side operations (if service key is available)
+  supabaseAdmin = supabaseServiceKey 
+    ? createClient<Database>(supabaseUrl, supabaseServiceKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+    : null
+
+  console.log('Supabase clients initialized successfully')
+} catch (error) {
+  console.error('Failed to initialize Supabase clients:', error)
+  throw new Error('Supabase initialization failed')
+}
+
+export { supabase, supabaseAdmin }
 
 // Database operations
 export const dbOperations = {
