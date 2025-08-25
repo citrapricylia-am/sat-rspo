@@ -13,10 +13,12 @@
           "esModuleInterop": true,
           "allowSyntheticDefaultImports": true,
           "skipLibCheck": true,
-          "forceConsistentCasingInFileNames": true
+          "forceConsistentCasingInFileNames": true,
+          "outExtension": ".cjs"
         },
         "excludeFiles": ["**/*.mjs", "**/*.esm.js"],
-        "zeroConfig": false
+        "zeroConfig": false,
+        "outputDirectory": ".vercel/output"
       }
     }
   ],
@@ -35,5 +37,10 @@
   },
   "env": {
     "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
   }
 }
