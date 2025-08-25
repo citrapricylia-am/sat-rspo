@@ -1,9 +1,9 @@
 {
-  "name": "sat-rspo-padi-api-commonjs",
+  "name": "sat-rspo-padi-api",
   "private": true,
   "version": "1.0.0",
-  "type": "commonjs",
-  "main": "index.cjs",
+  "type": "module",
+  "main": "index.js",
   "engines": {
     "node": ">=18.0.0"
   }
