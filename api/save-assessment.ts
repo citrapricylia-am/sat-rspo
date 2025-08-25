@@ -1,6 +1,6 @@
-import { dbOperations } from './lib/db.js'
-import { withMiddleware } from './lib/middleware.js'
-import type { AuthenticatedRequest } from './lib/middleware.js'
+import { dbOperations } from './lib/db'
+import { withMiddleware } from './lib/middleware'
+import type { AuthenticatedRequest } from './lib/middleware'
 import type { 
   CreateAssessmentRequest, 
   UpdateAssessmentRequest, 

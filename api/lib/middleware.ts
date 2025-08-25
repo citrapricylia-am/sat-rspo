@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { supabase, dbOperations } from './db.js'
-import type { AuthUser, UserProfile, ApiError } from '../types/database.js'
+import { supabase, dbOperations } from './db'
+import type { AuthUser, UserProfile, ApiError } from '../types/database'
 
 // Extended request interface with user data
 export interface AuthenticatedRequest extends VercelRequest {

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Database, UserProfile, Assessment, LoginHistory } from '../types/database.js'
+import type { Database, UserProfile, Assessment, LoginHistory } from '../types/database'
 
 // Supabase configuration
 const supabaseUrl = process.env.SUPABASE_URL!

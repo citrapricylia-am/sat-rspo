@@ -1,7 +1,7 @@
-import { dbOperations } from './lib/db.js'
-import { withMiddleware, isValidEmail } from './lib/middleware.js'
-import type { AuthenticatedRequest } from './lib/middleware.js'
-import type { UpdateProfileRequest, ProfileResponse } from './types/database.js'
+import { dbOperations } from './lib/db'
+import { withMiddleware, isValidEmail } from './lib/middleware'
+import type { AuthenticatedRequest } from './lib/middleware'
+import type { UpdateProfileRequest, ProfileResponse } from './types/database'
 import type { VercelResponse } from '@vercel/node'
 
 const handler = async (req: AuthenticatedRequest, res: VercelResponse) => {
