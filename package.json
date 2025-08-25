@@ -2,9 +2,8 @@
   "name": "vite_react_shadcn_ts",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "npm run dev:api & npm run dev:frontend",
+    "dev": "vite",
     "dev:api": "node api-server.mjs",
     "dev:frontend": "vite",
     "dev:vercel": "vercel dev --listen 3000",
@@ -12,7 +11,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "setup": "npm install && npm run dev"
+    "setup": "npm install"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
