@@ -1,0 +1,20 @@
+{
+  "name": "sat-rspo-padi-api",
+  "private": true,
+  "version": "1.0.0",
+  "type": "commonjs",
+  "main": "index.cjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "exports": {
+    ".": {
+      "require": "./index.cjs",
+      "default": "./index.cjs"
+    }
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.7",
+    "cors": "^2.8.5"
+  }
+}

@@ -27,3 +27,14 @@ node_modules/
 # Environment files (handled separately)
 .env.local
 .env.example
+
+# Exclude all ES module files
+**/*.mjs
+**/*.esm.js
+node_modules
+.env.local
+.env
+
+# Exclude any potential conflicting config files
+tsconfig.json
+vite.config.ts

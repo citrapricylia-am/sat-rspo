@@ -1,11 +1,16 @@
 {
   "version": 2,
+  "buildCommand": "echo 'Building CommonJS API...' && npm install",
   "builds": [
     {
       "src": "api/**/*.ts",
-      "use": "@vercel/node",
+      "use": "@vercel/node@3.0.27",
       "config": {
         "includeFiles": ["api/**/*"],
+        "excludeFiles": ["**/*.mjs", "**/*.esm.js", "vite.config.ts", "src/**/*"],
+        "runtime": "nodejs18.x",
+        "outputDirectory": ".vercel/output",
+        "zeroConfig": false,
         "typescript": {
           "module": "commonjs",
           "target": "es2020",
@@ -13,12 +18,12 @@
           "esModuleInterop": true,
           "allowSyntheticDefaultImports": true,
           "skipLibCheck": true,
-          "forceConsistentCasingInFileNames": true,
-          "outExtension": ".cjs"
+          "forceConsistentCasingInFileNames": true
         },
-        "excludeFiles": ["**/*.mjs", "**/*.esm.js"],
-        "zeroConfig": false,
-        "outputDirectory": ".vercel/output"
+        "environment": {
+          "NODE_ENV": "production",
+          "FORCE_COMMONJS": "true"
+        }
       }
     }
   ],
@@ -32,15 +37,21 @@
     "api/**/*.ts": {
       "runtime": "nodejs18.x",
       "memory": 1024,
-      "maxDuration": 10
+      "maxDuration": 10,
+      "environment": {
+        "NODE_ENV": "production",
+        "FORCE_COMMONJS": "true"
+      }
     }
   },
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "FORCE_COMMONJS": "true"
   },
   "build": {
     "env": {
-      "NODE_ENV": "production"
+      "NODE_ENV": "production",
+      "FORCE_COMMONJS": "true"
     }
   }
 }

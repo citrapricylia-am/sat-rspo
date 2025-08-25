@@ -1,9 +1,9 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "sat-rspo-padi-commonjs",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "index.cjs",
   "engines": {
     "node": ">=18.0.0"
   },
