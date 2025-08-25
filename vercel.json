@@ -3,7 +3,17 @@
   "builds": [
     {
       "src": "api/**/*.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["api/**/*"],
+        "typescript": {
+          "module": "commonjs",
+          "target": "es2020",
+          "moduleResolution": "node",
+          "esModuleInterop": true,
+          "allowSyntheticDefaultImports": true
+        }
+      }
     }
   ],
   "routes": [

@@ -1,0 +1,26 @@
+# Development files
+dev-*.js
+dev-*.mjs
+simple-dev-server.mjs
+api-server.mjs
+
+# Test files
+test/
+
+# Documentation
+*.md
+!README.md
+
+# Node modules (already handled by Vercel)
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Environment files (handled separately)
+.env.local
+.env.example
