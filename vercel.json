@@ -1,35 +1,16 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/**/*.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["api/**/*"],
-        "excludeFiles": ["src/**/*", "public/**/*"],
-        "typescript": {
-          "module": "esnext",
-          "target": "es2020",
-          "moduleResolution": "node",
-          "esModuleInterop": true,
-          "allowSyntheticDefaultImports": true,
-          "skipLibCheck": true,
-          "forceConsistentCasingInFileNames": true
-        }
-      }
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "nodejs20.x",
+      "memory": 1024,
+      "maxDuration": 10
     }
-  ],
+  },
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/api/$1"
     }
-  ],
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs18.x",
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  }
+  ]
 }
