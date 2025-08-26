@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { api, ApiUser } from '@/lib/api';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { api, supabase } from '@/lib/api';
 
 export interface User {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
   phone?: string;
@@ -16,6 +16,7 @@ interface AuthContextType {
   register: (userData: Omit<User, 'id'> & { password: string }) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  saveAssessmentResult: (result: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,11 +35,170 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [registrationData, setRegistrationData] = useState<Omit<User, 'id'> & { password: string } | null>(null);
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state changed:', event, session?.user?.id);
+      
+      if (session) {
+        const { user: authUser } = session;
+
+        // Check if user profile exists in database (try 'users' first, fallback to 'profiles')
+        let { data: userData, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+          
+        // If 'users' table doesn't exist, try 'profiles' table
+        if (error && error.code === 'PGRST116') {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
+            
+          if (!profileError && profileData) {
+            // Convert profile data to match expected format
+            userData = {
+              id: profileData.id,
+              full_name: profileData.full_name,
+              email: profileData.email,
+              phone: null, // profiles table might not have these fields
+              address: null,
+              role: profileData.role
+            };
+            error = null;
+          } else {
+            error = profileError;
+          }
+        }
+
+        if (error && error.code !== 'PGRST116') {
+          console.error("❌ Error fetching user data:", error);
+          return;
+        }
+
+        if (userData) {
+          // User profile exists, set user state
+          console.log('✅ User profile found:', userData);
+          setUser({
+            id: userData.id,
+            fullName: userData.full_name,
+            email: authUser.email as string,
+            phone: userData.phone,
+            address: userData.address,
+            role: userData.role,
+          });
+          setRegistrationData(null);
+        } else if (registrationData) {
+          // User profile doesn't exist and we have registration data, create profile
+          console.log('📝 Creating user profile with data:', {
+            id: authUser.id,
+            full_name: registrationData.fullName,
+            email: registrationData.email,
+            phone: registrationData.phone,
+            address: registrationData.address,
+            role: registrationData.role,
+          });
+          
+          // Try to insert into 'users' table first
+          let insertError = null;
+          const { error: usersInsertError } = await supabase
+            .from('users')
+            .insert({
+              id: authUser.id,
+              full_name: registrationData.fullName,
+              email: registrationData.email,
+              phone: registrationData.phone,
+              address: registrationData.address,
+              role: registrationData.role,
+            });
+            
+          if (usersInsertError) {
+            console.log('⚠️ Users table insert failed, trying profiles table:', usersInsertError.message);
+            // If 'users' table doesn't exist, try 'profiles' table
+            const { error: profilesInsertError } = await supabase
+              .from('profiles')
+              .insert({
+                id: authUser.id,
+                full_name: registrationData.fullName,
+                email: registrationData.email,
+                role: registrationData.role,
+              });
+            insertError = profilesInsertError;
+          } else {
+            insertError = usersInsertError;
+          }
+            
+          if (insertError) {
+            console.error("❌ Error inserting new user:", insertError);
+          } else {
+            console.log('✅ User profile created successfully');
+            // Fetch the newly created user data to confirm from the correct table
+            let { data: newUserData, error: fetchError } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', authUser.id)
+              .single();
+              
+            // If 'users' doesn't exist, try 'profiles'
+            if (fetchError && fetchError.code === 'PGRST116') {
+              const { data: profileData, error: profileFetchError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', authUser.id)
+                .single();
+                
+              if (!profileFetchError && profileData) {
+                newUserData = {
+                  id: profileData.id,
+                  full_name: profileData.full_name,
+                  email: profileData.email,
+                  phone: registrationData.phone, // Use registration data for fields not in profiles
+                  address: registrationData.address,
+                  role: profileData.role
+                };
+                fetchError = null;
+              } else {
+                fetchError = profileFetchError;
+              }
+            }
+              
+            if (fetchError) {
+              console.error("❌ Error fetching new user data:", fetchError);
+            } else {
+              console.log('✅ New user data retrieved:', newUserData);
+              setUser({
+                id: newUserData.id,
+                fullName: newUserData.full_name,
+                email: authUser.email as string,
+                phone: newUserData.phone,
+                address: newUserData.address,
+                role: newUserData.role,
+              });
+            }
+          }
+          setRegistrationData(null);
+        } else {
+          console.log('⚠️ User authenticated but no profile found and no registration data');
+        }
+      } else {
+        console.log('🚺 User signed out');
+        setUser(null);
+        setRegistrationData(null);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [registrationData]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const u = await api.login({ email, password });
-      setUser(u);
+      await api.login({ email, password });
       return true;
     } catch (e) {
       console.error(e);
@@ -48,24 +208,64 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (userData: Omit<User, 'id'> & { password: string }): Promise<boolean> => {
     try {
-      const u = await api.register({
+      console.log('🔄 Starting registration process with data:', {
         fullName: userData.fullName,
         email: userData.email,
         phone: userData.phone,
         address: userData.address,
-        role: userData.role,
-        password: userData.password,
+        role: userData.role
       });
-      setUser(u);
+      
+      // Store registration data before signup
+      setRegistrationData(userData);
+      
+      // Sign up user with Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: {
+            full_name: userData.fullName,
+            phone: userData.phone,
+            address: userData.address,
+            role: userData.role
+          }
+        }
+      });
+
+      if (error) {
+        console.error('❌ Registration error:', error.message);
+        setRegistrationData(null);
+        throw new Error(error.message);
+      }
+      
+      console.log('✅ Auth signup successful:', data.user?.id);
       return true;
     } catch (e) {
-      console.error(e);
+      console.error('❌ Registration failed:', e);
+      setRegistrationData(null);
       return false;
     }
   };
 
-  const logout = () => {
-    setUser(null);
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const saveAssessmentResult = async (result: any) => {
+    try {
+      if (!user) {
+        console.error('❌ Cannot save assessment: User not authenticated');
+        throw new Error("Pengguna tidak terotentikasi. Silakan login terlebih dahulu.");
+      }
+      
+      console.log('🔄 Saving assessment result for user:', user.id, result);
+      await api.saveAssessmentResult({ ...result, userId: user.id });
+      console.log('✅ Assessment result saved successfully');
+    } catch (e) {
+      console.error("❌ Failed to save assessment result:", e);
+      throw e; // Re-throw so the caller can handle it
+    }
   };
 
   const value = {
@@ -73,7 +273,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    saveAssessmentResult,
   };
 
   return (

@@ -4,8 +4,15 @@ import { createClient } from '@supabase/supabase-js'
 // In browser: import.meta.env (Vite), in Node: process.env
 const getEnvVar = (name) => {
   // For Vite/browser environment
-  if (typeof import !== 'undefined' && import.meta && import.meta.env) {
-    return import.meta.env[name]
+  if (typeof window !== 'undefined') {
+    try {
+      // eslint-disable-next-line no-undef
+      if (import.meta && import.meta.env) {
+        return import.meta.env[name]
+      }
+    } catch (e) {
+      // import.meta not available, continue to other checks
+    }
   }
   // For Node.js environment
   if (typeof process !== 'undefined' && process.env) {
@@ -34,8 +41,15 @@ if (!supabaseUrl) {
   console.log('- NEXT_PUBLIC_SUPABASE_URL:', getEnvVar('NEXT_PUBLIC_SUPABASE_URL'))
   console.log('- SUPABASE_URL:', getEnvVar('SUPABASE_URL'))
   console.log('- REACT_APP_SUPABASE_URL:', getEnvVar('REACT_APP_SUPABASE_URL'))
-  if (typeof import !== 'undefined' && import.meta && import.meta.env) {
-    console.log('🌍 Available Vite env vars:', Object.keys(import.meta.env))
+  if (typeof window !== 'undefined') {
+    try {
+      // eslint-disable-next-line no-undef
+      if (import.meta && import.meta.env) {
+        console.log('🌍 Available Vite env vars:', Object.keys(import.meta.env))
+      }
+    } catch (e) {
+      console.log('🌍 import.meta not available in this environment')
+    }
   }
   throw new Error('Missing SUPABASE_URL environment variable')
 }

@@ -1,4 +1,13 @@
 {
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ],
   "compilerOptions": {
     "composite": true,
     "skipLibCheck": true,
@@ -12,8 +21,5 @@
     "types": [
       "node"
     ]
-  },
-  "include": [
-    "vite.config.ts"
-  ]
+  }
 }

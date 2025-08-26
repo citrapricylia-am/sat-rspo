@@ -1,122 +1,94 @@
-// src/api.ts
-import { supabase } from './supabase'
+import { createClient } from '@supabase/supabase-js';
+
+// Ganti placeholder ini dengan URL dan Kunci Supabase Anda yang asli
+// PENTING: Untuk produksi, gunakan variabel lingkungan!
+const supabaseUrl = 'https://ileiutoopvambzimbjyr.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsZWl1dG9vcHZhbWJ6aW1ianlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMDQxNzAsImV4cCI6MjA3MTY4MDE3MH0.MFWTrB6O54s0v9wsrpbUjpvkO0TlnsY8QY7SrDsj09Q';
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export interface ApiUser {
-  id: number; // legacy, kita isi 0 supaya minim perubahan
   fullName: string;
   email: string;
   phone?: string;
   address?: string;
   role: 'petani' | 'manajer';
+  password?: string;
 }
 
-async function currentUser() {
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data.user) throw new Error('Tidak ada session user')
-  return data.user
+export interface AssessmentResult {
+  userId: string;
+  stage: number;
+  answers: any;
+  totalScore: number;
+  maxScore: number;
+  percentage: number;
 }
 
 export const api = {
-  // REGISTER: daftar + buat profile
-  register: async (payload: {
-    fullName: string;
-    email: string;
-    phone?: string;
-    address?: string;
-    role: 'petani' | 'manajer';
-    password: string;
-  }): Promise<ApiUser> => {
+  /**
+   * Fungsi untuk login pengguna.
+   */
+  async login({ email, password }: Pick<ApiUser, 'email' | 'password'>) {
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    if (authError) throw new Error(authError.message);
+    return authData.user;
+  },
+  
+  /**
+   * Fungsi register hanya melakukan sign-up.
+   * Logika pembuatan profil ditangani oleh AuthContext.
+   */
+  async register(userData: ApiUser) {
     const { data, error } = await supabase.auth.signUp({
-      email: payload.email,
-      password: payload.password,
+      email: userData.email,
+      password: userData.password,
       options: {
         data: {
-          full_name: payload.fullName,
-          phone: payload.phone ?? null,
-          address: payload.address ?? null,
-          role: payload.role,
-        },
-      },
-    })
-    if (error) throw new Error(error.message)
-    const user = data.user
-    if (!user) throw new Error('Sign up gagal')
-
-    // insert profile (abaikan jika sudah ada)
-    const { error: pErr } = await supabase.from('profiles').insert({
-      id: user.id,
-      full_name: payload.fullName,
-      email: payload.email,
-      role: payload.role,
-    })
-    if (pErr && pErr.code !== '23505') throw new Error(pErr.message)
-
-    return {
-      id: 0,
-      fullName: payload.fullName,
-      email: payload.email,
-      phone: payload.phone,
-      address: payload.address,
-      role: payload.role,
-    }
+          full_name: userData.fullName,
+          phone: userData.phone,
+          address: userData.address,
+          role: userData.role
+        }
+      }
+    });
+    if (error) throw new Error(error.message);
+    return data;
   },
 
-  // LOGIN: dapatkan session + profile
-  login: async (payload: { email: string; password: string }): Promise<ApiUser> => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: payload.email,
-      password: payload.password,
-    })
-    if (error) throw new Error(error.message)
-    const user = data.user
-    if (!user) throw new Error('Login gagal')
-
-    // ambil profile
-    const { data: profile, error: profErr } = await supabase
-      .from('profiles')
-      .select('full_name, email, role')
-      .eq('id', user.id)
-      .single()
-
-    if (profErr) throw new Error(profErr.message)
-
-    return {
-      id: 0,
-      fullName: profile.full_name,
-      email: profile.email,
-      phone: undefined,
-      address: undefined,
-      role: profile.role,
-    }
-  },
-
-  // SIMPAN ASSESSMENT
-  saveAssessment: async (payload: {
-    userId: number; // legacy, TIDAK dipakai. Kita pakai auth.uid()
-    stage: 1 | 2 | 3;
-    answers: unknown;
-    totalScore: number;
-    maxScore: number;
-    percentage: number;
-  }): Promise<{ ok: true; id: string }> => {
-    // map stage lama -> enum baru
-    const stageMap = { 1: 'stage1', 2: 'stage2', 3: 'stage3' } as const
-    const user = await currentUser()
-
+  /**
+   * Fungsi untuk menyimpan hasil tes assessment.
+   */
+  async saveAssessmentResult(result: AssessmentResult) {
+    console.log('🔄 Saving assessment result:', result);
+    
+    // Simpan hasil ke tabel 'assessment_results'
     const { data, error } = await supabase
-      .from('assessments')
-      .insert({
-        user_id: user.id,
-        stage: stageMap[payload.stage],
-        answers_json: payload.answers as any,
-        total_score: payload.totalScore,
-        max_score: payload.maxScore,
-        percentage: payload.percentage,
-      })
-      .select('id')
-      .single()
+      .from('assessment_results')
+      .insert([
+        {
+          user_id: result.userId,
+          stage: result.stage,
+          answers: result.answers,
+          total_score: result.totalScore,
+          max_score: result.maxScore,
+          percentage: result.percentage,
+        },
+      ]);
 
-    if (error) throw new Error(error.message)
-    return { ok: true, id: data.id }
+    if (error) {
+      console.error('❌ Error saving assessment:', error);
+      throw new Error(error.message);
+    }
+    
+    console.log('✅ Assessment result saved successfully:', data);
+    return data;
   },
-}
+  
+  /**
+   * Alias for backward compatibility
+   */
+  async saveAssessment(result: AssessmentResult) {
+    return this.saveAssessmentResult(result);
+  }
+};
