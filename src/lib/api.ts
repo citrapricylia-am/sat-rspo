@@ -43,12 +43,10 @@ export const api = {
     if (!user) throw new Error('Sign up gagal')
 
     // insert profile (abaikan jika sudah ada)
-    const { error: pErr } = await supabase.from('user_profiles').insert({
-      user_id: user.id,
+    const { error: pErr } = await supabase.from('profiles').insert({
+      id: user.id,
       full_name: payload.fullName,
       email: payload.email,
-      phone: payload.phone ?? null,
-      address: payload.address ?? null,
       role: payload.role,
     })
     if (pErr && pErr.code !== '23505') throw new Error(pErr.message)
@@ -75,9 +73,9 @@ export const api = {
 
     // ambil profile
     const { data: profile, error: profErr } = await supabase
-      .from('user_profiles')
-      .select('full_name, email, phone, address, role')
-      .eq('user_id', user.id)
+      .from('profiles')
+      .select('full_name, email, role')
+      .eq('id', user.id)
       .single()
 
     if (profErr) throw new Error(profErr.message)
@@ -86,8 +84,8 @@ export const api = {
       id: 0,
       fullName: profile.full_name,
       email: profile.email,
-      phone: profile.phone ?? undefined,
-      address: profile.address ?? undefined,
+      phone: undefined,
+      address: undefined,
       role: profile.role,
     }
   },

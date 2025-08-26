@@ -17,7 +17,7 @@ async function testSupabaseConnection() {
     // Test 1: Check if we can connect to Supabase
     console.log('\n1️⃣ Testing connection...')
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('profiles')
       .select('count', { count: 'exact', head: true })
     
     if (error) {
@@ -26,7 +26,7 @@ async function testSupabaseConnection() {
     }
     
     console.log('✅ Connection successful!')
-    console.log('📊 User profiles table exists')
+    console.log('📊 Profiles table exists')
     
     // Test 2: Test Auth functionality
     console.log('\n2️⃣ Testing authentication...')

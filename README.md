@@ -1,73 +1,138 @@
-# Welcome to your Lovable project
+# SAT RSPO PADI Project
 
-## Project info
+## 🚀 Clean Minimal Implementation
 
-**URL**: https://lovable.dev/projects/e0301058-30ce-4c97-90f0-33e621dd455a
+This project features a **clean, minimal Supabase TypeScript backend** with authentication APIs ready for Vercel deployment.
 
-## How can I edit this code?
+### 🏗️ Project Structure
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/e0301058-30ce-4c97-90f0-33e621dd455a) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+├── api/
+│   └── auth/
+│       ├── register.ts    # POST /api/auth/register
+│       └── login.ts       # POST /api/auth/login
+├── lib/
+│   └── supabase-config.ts # Supabase client configuration
+├── database/
+│   └── sat-rspo-schema.sql # Database schema with RLS
+└── src/                   # React/Vite frontend (preserved)
 ```
 
-**Edit a file directly in GitHub**
+## 📋 API Endpoints
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Registration
+```bash
+POST /api/auth/register
+Content-Type: application/json
 
-**Use GitHub Codespaces**
+{
+  "full_name": "John Doe",
+  "email": "john@example.com",
+  "password": "securepassword123",
+  "role": "petani",        // or "manajer"
+  "phone": "081234567890",  // optional
+  "address": "Jl. Example"  // optional
+}
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Login
+```bash
+POST /api/auth/login
+Content-Type: application/json
 
-## What technologies are used for this project?
+{
+  "email": "john@example.com",
+  "password": "securepassword123"
+}
+```
 
-This project is built with:
+### Response Format
+```json
+{
+  "success": true,
+  "data": {
+    "user": { "id": "...", "email": "..." },
+    "session": { "access_token": "...", "refresh_token": "..." },
+    "profile": { "full_name": "...", "role": "..." }
+  }
+}
+```
 
+## 🔧 Setup & Development
+
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Environment Variables
+Ensure `.env.local` contains:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://ileiutoopvambzimbjyr.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+VITE_SUPABASE_URL=https://ileiutoopvambzimbjyr.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### 3. Deploy Database Schema
+1. Copy `database/sat-rspo-schema.sql`
+2. Paste in Supabase SQL Editor
+3. Run the script
+
+### 4. Test Connection
+```bash
+node test-clean-api.js
+```
+
+### 5. Development
+```bash
+npm run dev     # Start Vite frontend
+npm run build   # Build for production
+```
+
+## 🚀 Vercel Deployment
+
+### Automatic Deploy
+```bash
+npx vercel
+```
+
+### Environment Variables in Vercel
+Add these in Vercel dashboard:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+## 🔒 Security Features
+
+- ✅ Row Level Security (RLS) enabled
+- ✅ Only "petani" and "manajer" roles supported
+- ✅ User can only access their own data
+- ✅ Supabase Auth integration
+- ✅ TypeScript type safety
+
+## 🛠️ Technologies
+
+**Frontend:**
+- React + TypeScript
 - Vite
-- TypeScript
-- React
-- shadcn-ui
 - Tailwind CSS
+- shadcn-ui
 
-## How can I deploy this project?
+**Backend:**
+- Next.js API Routes (TypeScript)
+- Supabase (PostgreSQL + Auth)
+- Vercel Serverless Functions
 
-Simply open [Lovable](https://lovable.dev/projects/e0301058-30ce-4c97-90f0-33e621dd455a) and click on Share -> Publish.
+## 📖 Database Schema
 
-## Can I connect a custom domain to my Lovable project?
+**Tables:**
+- `profiles` - User profile information
+- `assessments` - Assessment data (optional)
+- `login_history` - Login audit trail (optional)
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+**Key Features:**
+- UUID primary keys
+- Foreign key constraints
+- Automatic timestamps
+- RLS policies
+- Role-based access control

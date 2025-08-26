@@ -1,7 +1,6 @@
-// Vite/React
-import { createClient } from '@supabase/supabase-js'
+// Export the robust Supabase client configuration
+export { supabase, testSupabaseConnection } from './supabase-config'
 
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-)
+// Default export for compatibility
+import { supabase } from './supabase-config'
+export default supabase
