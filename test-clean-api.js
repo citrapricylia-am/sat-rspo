@@ -3,7 +3,7 @@
  * Run: node test-clean-api.js
  */
 
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from 'npm:@supabase/supabase-js';
 
 // Direct Supabase configuration for testing
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://ileiutoopvambzimbjyr.supabase.co';
@@ -11,7 +11,7 @@ const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsI
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function testConnection() {
+export async function testConnection() {
   console.log('🧪 Testing Clean Supabase Configuration...\n');
   
   try {
@@ -42,25 +42,22 @@ async function main() {
   
   if (connectionOk) {
     console.log('\n🎯 Ready for testing:');
-    console.log('   • POST /api/auth/register');
-    console.log('   • POST /api/auth/login');
+    console.log('    • POST /api/auth/register');
+    console.log('    • POST /api/auth/login');
     console.log('\n📖 API Response format:');
-    console.log('   { success: boolean, data?: any, error?: string }');
+    console.log('    { success: boolean, data?: any, error?: string }');
     console.log('\n🔐 Supported roles: "petani", "manajer"');
     console.log('\n📋 Database schema: profiles table with RLS enabled');
   } else {
     console.log('\n❌ Please fix database connection before testing APIs');
     console.log('\n🔧 Steps to fix:');
-    console.log('   1. Deploy database/sat-rspo-schema.sql to Supabase');
-    console.log('   2. Check environment variables in .env.local');
-    console.log('   3. Verify Supabase project URL and keys');
+    console.log('    1. Deploy database/sat-rspo-schema.sql to Supabase');
+    console.log('    2. Check environment variables in .env.local');
+    console.log('    3. Verify Supabase project URL and keys');
   }
 }
 
-if (require.main === module) {
+// Check if the script is run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 }
-
-export const testConnection = () => {
-  //...
-};
