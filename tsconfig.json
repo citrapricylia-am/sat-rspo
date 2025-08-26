@@ -2,12 +2,12 @@
   "compilerOptions": {
     "composite": true,
     "skipLibCheck": true,
-    "module": "esnext", // Ganti ini
+    "module": "esnext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "target": "es2022", // Ganti ini
+    "target": "es2022",
     "lib": ["es2022"],
     "types": [
       "node"
@@ -15,5 +15,5 @@
   },
   "include": [
     "vite.config.ts"
-  ]
+  ]
 }
