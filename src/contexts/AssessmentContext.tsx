@@ -87,23 +87,36 @@ export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({ children
 		if (stage === 2) questions = stage2Questions;
 		if (stage === 3) questions = stage3Questions;
 
-		let totalQuestionsCount = 0;
+		let maxScore = 0;
 		for (const q of questions) {
-			// count main question
-			totalQuestionsCount += 1;
+			// Add maximum score for main question (which is 2)
+			maxScore += 2;
 
-			// count relevant sub-questions based on user's answer value
+			// Add maximum score for relevant sub-questions based on user's answer value
 			const ans = answerMap.get(q.id);
-			if (!ans || !q.subQuestions || q.subQuestions.length === 0) continue;
-
-			const relevantSubs = q.subQuestions.filter((sq) =>
-				(sq.triggerValue && sq.triggerValue === ans.value) ||
-				(!sq.triggerValue && q.triggerSubQuestions && ans.value === q.triggerSubQuestions)
-			);
-			totalQuestionsCount += relevantSubs.length;
+			if (ans && q.subQuestions && q.subQuestions.length > 0) {
+				const relevantSubs = q.subQuestions.filter((sq) =>
+					(sq.triggerValue && sq.triggerValue === ans.value) ||
+					(!sq.triggerValue && q.triggerSubQuestions && ans.value === q.triggerSubQuestions)
+				);
+				// Each sub-question also has maximum score of 2
+				maxScore += relevantSubs.length * 2;
+			}
 		}
 
-		return totalQuestionsCount * 2;
+		// Fallback: if no answers yet, use a basic calculation
+		if (answers.length === 0) {
+			let totalQuestionsCount = questions.length;
+			// Add potential sub-questions (estimate)
+			for (const q of questions) {
+				if (q.subQuestions) {
+					totalQuestionsCount += q.subQuestions.length;
+				}
+			}
+			return totalQuestionsCount * 2;
+		}
+
+		return maxScore;
 	};
 
 	const getTotalScore = (): number => {
@@ -130,9 +143,17 @@ export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({ children
 
 	const isEligibleForNextStage = (stage: 1 | 2): boolean => {
 		const score = getStageScore(stage);
-		// Basic eligibility: at least 50% score to continue
-		const maxPossibleScore = stage === 1 ? 20 : 30; // Mock values (not used in UI now)
-		return (score / maxPossibleScore) >= 0.5;
+		const maxScore = getStageMaxScore(stage);
+		
+		// For stage 1 (eligibility test), require 70% minimum
+		if (stage === 1) {
+			const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+			return percentage >= 70;
+		}
+		
+		// For other stages, use different criteria if needed
+		const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+		return percentage >= 60; // Lower threshold for later stages
 	};
 
 	const getNextStage = (currentStage: 1 | 2 | 3 | 'completed') => {
