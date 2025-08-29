@@ -136,6 +136,8 @@ async function assessmentGetHandler(req, res) {
           id,
           full_name,
           email,
+          phone,
+          address,
           role,
           created_at
         `)

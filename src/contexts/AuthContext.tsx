@@ -65,8 +65,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               id: profileData.id,
               full_name: profileData.full_name,
               email: profileData.email,
-              phone: null, // profiles table might not have these fields
-              address: null,
+              phone: profileData.phone,
+              address: profileData.address,
               role: profileData.role
             };
             error = null;
@@ -125,6 +125,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 id: authUser.id,
                 full_name: registrationData.fullName,
                 email: registrationData.email,
+                phone: registrationData.phone,
+                address: registrationData.address,
                 role: registrationData.role,
               });
             insertError = profilesInsertError;
@@ -156,8 +158,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   id: profileData.id,
                   full_name: profileData.full_name,
                   email: profileData.email,
-                  phone: registrationData.phone, // Use registration data for fields not in profiles
-                  address: registrationData.address,
+                  phone: profileData.phone,
+                  address: profileData.address,
                   role: profileData.role
                 };
                 fetchError = null;
