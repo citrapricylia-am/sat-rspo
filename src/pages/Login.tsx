@@ -31,19 +31,16 @@ const Login = () => {
           description: "Selamat datang! Silakan lanjutkan ke pretest.",
         });
         navigate('/pretest');
-      } else {
-        toast({
-          title: "Login Gagal",
-          description: "Email atau password salah",
-          variant: "destructive"
-        });
       }
     } catch (error) {
+      // Display the specific error message from AuthContext/API
+      const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan. Silakan coba lagi.';
       toast({
-        title: "Error",
-        description: "Terjadi kesalahan. Silakan coba lagi.",
+        title: "Login Gagal",
+        description: errorMessage,
         variant: "destructive"
       });
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }

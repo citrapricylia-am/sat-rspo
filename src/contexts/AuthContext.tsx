@@ -168,12 +168,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       console.log('🔑 Attempting login for:', email);
-      await api.login({ email, password });
+      
+      // Clean email input
+      const cleanEmail = email.trim().toLowerCase();
+      
+      const result = await api.login({ email: cleanEmail, password });
       console.log('✅ Login successful, waiting for auth state change...');
+      
+      // Wait a moment for the auth state change to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       return true;
     } catch (e) {
       console.error('❌ Login failed:', e);
-      return false;
+      throw e; // Re-throw to show error message to user
     }
   };
 
@@ -198,17 +206,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error('Alamat harus diisi');
       }
       
+      // Clean the email
+      const cleanEmail = userData.email.trim().toLowerCase();
+      
       // Store registration data before signup
       setRegistrationData(userData);
       
       // Sign up user with Supabase Auth
-      // The database trigger will automatically create the profile
       const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
+        email: cleanEmail,
         password: userData.password,
         options: {
           data: {
             full_name: userData.fullName,
+            fullName: userData.fullName, // Include both for compatibility
             phone: userData.phone,
             address: userData.address,
             role: userData.role
@@ -232,35 +243,65 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
       
-      console.log('✅ Auth signup successful:', data.user?.id);
+      if (!data.user) {
+        throw new Error('Registrasi gagal: User data tidak ditemukan');
+      }
       
-      // Since we disabled the trigger, we'll always create the profile manually
+      console.log('✅ Auth signup successful:', data.user.id);
+      
+      // Create user profile manually (since trigger might be disabled)
       console.log('🔄 Creating user profile manually...');
-      const { error: insertError } = await supabase
+      
+      const profileData = {
+        id: data.user.id,
+        full_name: userData.fullName,
+        email: cleanEmail,
+        phone: userData.phone,
+        address: userData.address,
+        role: userData.role
+      };
+      
+      const { data: profileResult, error: insertError } = await supabase
         .from('profiles')
-        .insert({
-          id: data.user?.id,
-          full_name: userData.fullName,
-          email: userData.email,
-          phone: userData.phone,
-          address: userData.address,
-          role: userData.role
-        });
+        .insert(profileData)
+        .select()
+        .single();
         
       if (insertError) {
         console.error('❌ Manual profile creation failed:', insertError);
-        // If profile creation fails, we should clean up the auth user
+        
+        // If it's a duplicate error, try to fetch existing profile
+        if (insertError.code === '23505') {
+          console.log('🔍 Profile might already exist, trying to fetch...');
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+            
+          if (existingProfile) {
+            console.log('✅ Found existing profile, registration complete');
+            setRegistrationData(null);
+            return true;
+          }
+        }
+        
+        // If profile creation fails completely, clean up the auth user
+        console.error('🧹 Cleaning up auth user due to profile creation failure');
         await supabase.auth.signOut();
-        throw new Error(`Failed to create user profile: ${insertError.message}`);
+        setRegistrationData(null);
+        throw new Error(`Gagal membuat profil pengguna: ${insertError.message}`);
       }
       
-      console.log('✅ Profile created successfully with phone:', userData.phone, 'and address:', userData.address);
+      console.log('✅ Profile created successfully:', profileResult);
+      console.log('📋 Profile data - phone:', profileResult.phone, 'address:', profileResult.address);
       
+      setRegistrationData(null);
       return true;
     } catch (e) {
       console.error('❌ Registration failed:', e);
       setRegistrationData(null);
-      return false;
+      throw e; // Re-throw to show error message to user
     }
   };
 

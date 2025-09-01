@@ -87,11 +87,14 @@ const Register = () => {
         navigate('/pretest');
       }
     } catch (error) {
+      // Display the specific error message from AuthContext
+      const errorMessage = error instanceof Error ? error.message : 'Gagal mendaftarkan akun. Silakan coba lagi.';
       toast({
         title: "Error",
-        description: "Gagal mendaftarkan akun. Silakan coba lagi.",
+        description: errorMessage,
         variant: "destructive"
       });
+      console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
     }
