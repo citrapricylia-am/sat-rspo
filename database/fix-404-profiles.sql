@@ -1,23 +1,22 @@
 -- =====================================================
--- COMPREHENSIVE FIX FOR AUTHENTICATION ISSUES
+-- IMMEDIATE FIX FOR 404 PROFILE ERRORS
 -- =====================================================
--- This script fixes orphaned users and authentication problems
+-- Run this to fix the orphaned users causing 404 errors
 
--- 1. Check current situation with detailed information
+-- 1. Show current orphaned users
 SELECT 
-    'Auth Users Analysis' as status,
+    '🔍 Current Orphaned Users' as status,
     u.id,
     u.email,
-    u.email_confirmed_at,
     u.created_at,
-    u.raw_user_meta_data,
-    CASE WHEN p.id IS NULL THEN 'MISSING PROFILE' ELSE 'HAS PROFILE' END as profile_status
+    u.raw_user_meta_data
 FROM auth.users u
 LEFT JOIN public.profiles p ON u.id = p.id
-ORDER BY u.created_at DESC
-LIMIT 15;
+WHERE p.id IS NULL
+  AND u.email_confirmed_at IS NOT NULL
+ORDER BY u.created_at DESC;
 
--- 2. Create profiles for any missing users (including recent problem users)
+-- 2. Create profiles for ALL orphaned users (including the recent ones)
 INSERT INTO public.profiles (id, full_name, email, phone, address, role)
 SELECT 
     u.id,
@@ -43,35 +42,15 @@ ON CONFLICT (id) DO UPDATE SET
     role = EXCLUDED.role,
     updated_at = NOW();
 
--- 3. Enhanced RLS policy fix
-DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
-DROP POLICY IF EXISTS "Service role full access" ON profiles;
-
--- Create comprehensive RLS policies
-CREATE POLICY "Users can view own profile" ON profiles
-    FOR SELECT USING (auth.uid() = id);
-
-CREATE POLICY "Users can insert own profile" ON profiles  
-    FOR INSERT WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile" ON profiles
-    FOR UPDATE USING (auth.uid() = id);
-
--- Allow service role full access for emergency operations
-CREATE POLICY "Service role full access" ON profiles
-    FOR ALL USING (auth.role() = 'service_role');
-
--- 4. Fix specific users from the logs
--- Handle users: 56eeeeff-0a8e-4640-9239-71f92a5ea5c3, 55216abd-bd8e-4f2a-b88d-3b01adda17b0
+-- 3. Fix specific users from your logs
 INSERT INTO public.profiles (id, full_name, email, phone, address, role)
 SELECT 
     u.id,
     COALESCE(
         NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''),
         NULLIF(TRIM(u.raw_user_meta_data->>'fullName'), ''),
-        SPLIT_PART(u.email, '@', 1)
+        SPLIT_PART(u.email, '@', 1),
+        'User'
     ) as full_name,
     u.email,
     COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>'phone'), ''), '') as phone,
@@ -79,9 +58,9 @@ SELECT
     COALESCE((u.raw_user_meta_data->>'role')::user_role, 'petani') as role
 FROM auth.users u
 WHERE u.id IN (
-    '56eeeeff-0a8e-4640-9239-71f92a5ea5c3',
-    '55216abd-bd8e-4f2a-b88d-3b01adda17b0'
-)
+    '45f9e0d6-2207-4e05-b478-d2cd57c53c16',
+    '0510e0cd-27bf-43bf-8e5e-6ca754b27b0c'
+) AND u.email_confirmed_at IS NOT NULL
 ON CONFLICT (id) DO UPDATE SET
     full_name = EXCLUDED.full_name,
     email = EXCLUDED.email,
@@ -90,9 +69,9 @@ ON CONFLICT (id) DO UPDATE SET
     role = EXCLUDED.role,
     updated_at = NOW();
 
--- 5. Verify the comprehensive fix
+-- 4. Verify all users now have profiles
 SELECT 
-    'Verification Results' as status,
+    '✅ Final Verification' as status,
     COUNT(*) as total_confirmed_users,
     COUNT(p.id) as users_with_profiles,
     COUNT(*) - COUNT(p.id) as remaining_orphaned
@@ -100,29 +79,25 @@ FROM auth.users u
 LEFT JOIN public.profiles p ON u.id = p.id
 WHERE u.email_confirmed_at IS NOT NULL;
 
--- 6. Show profiles for recent problem users
+-- 5. Show the fixed profiles
 SELECT 
-    'Problem Users Fixed' as status,
+    '🎉 Newly Created Profiles' as status,
     p.id,
     p.full_name,
     p.email,
+    p.phone,
+    p.address,
     p.role,
-    p.created_at,
-    p.updated_at
+    p.created_at
 FROM public.profiles p
-WHERE p.id IN (
-    '56eeeeff-0a8e-4640-9239-71f92a5ea5c3',
-    '55216abd-bd8e-4f2a-b88d-3b01adda17b0'
-) OR p.created_at > NOW() - INTERVAL '10 minutes' 
-   OR p.updated_at > NOW() - INTERVAL '10 minutes'
+WHERE p.created_at > NOW() - INTERVAL '5 minutes'
+   OR p.updated_at > NOW() - INTERVAL '5 minutes'
 ORDER BY GREATEST(p.created_at, p.updated_at) DESC;
 
 -- Success message
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Comprehensive authentication fix completed!';
-    RAISE NOTICE '👥 All orphaned users should now have profiles';
-    RAISE NOTICE '🔒 RLS policies updated for proper access';
+    RAISE NOTICE '✅ All orphaned users should now have profiles!';
+    RAISE NOTICE '🔄 Try refreshing your app - the 404 errors should be gone';
     RAISE NOTICE '🚀 Registration and login should work smoothly now';
-    RAISE NOTICE '⚠️ Users with existing emails should use login instead of registration';
 END $$;

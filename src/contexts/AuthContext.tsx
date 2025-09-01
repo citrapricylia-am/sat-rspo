@@ -91,7 +91,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.log('📋 User metadata:', authUser.user_metadata);
           
           try {
-            // First, try to create the profile
+            // Enhanced profile data with better fallbacks
             const profileData = {
               id: authUser.id,
               full_name: authUser.user_metadata?.full_name || 
@@ -103,9 +103,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               role: (authUser.user_metadata?.role as 'petani' | 'manajer') || 'petani'
             };
             
-            console.log('📝 Creating profile with data:', profileData);
+            console.log('📝 Creating emergency profile with enhanced data:', profileData);
             
-            const { data: createdProfile, error: createError } = await supabase
+            // Try multiple creation strategies
+            let createdProfile = null;
+            
+            // Strategy 1: Upsert (most robust)
+            const { data: upsertProfile, error: upsertError } = await supabase
               .from('profiles')
               .upsert(profileData, {
                 onConflict: 'id',
@@ -114,32 +118,56 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               .select()
               .single();
               
-            if (createError) {
-              console.error('❌ Failed to create emergency profile:', createError);
+            if (upsertProfile && !upsertError) {
+              createdProfile = upsertProfile;
+              console.log('✅ Emergency profile created via upsert:', createdProfile);
+            } else {
+              console.error('❌ Upsert failed:', upsertError);
               
-              // Try one more time to fetch existing profile
-              const { data: existingProfile } = await supabase
+              // Strategy 2: Insert
+              const { data: insertProfile, error: insertError } = await supabase
                 .from('profiles')
-                .select('*')
-                .eq('id', authUser.id)
+                .insert(profileData)
+                .select()
                 .single();
                 
-              if (existingProfile) {
-                console.log('✅ Found existing profile after retry');
-                setUser({
-                  id: existingProfile.id,
-                  fullName: existingProfile.full_name,
-                  email: authUser.email as string,
-                  phone: existingProfile.phone,
-                  address: existingProfile.address,
-                  role: existingProfile.role,
-                });
-                setRegistrationData(null);
-                return;
+              if (insertProfile && !insertError) {
+                createdProfile = insertProfile;
+                console.log('✅ Emergency profile created via insert:', createdProfile);
+              } else {
+                console.error('❌ Insert also failed:', insertError);
+                
+                // Strategy 3: Check if profile was created by another process
+                const { data: existingProfile } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', authUser.id)
+                  .single();
+                  
+                if (existingProfile) {
+                  createdProfile = existingProfile;
+                  console.log('✅ Found profile created by another process:', createdProfile);
+                }
               }
+            }
+            
+            if (createdProfile) {
+              // Set the user with the successfully created/found profile
+              setUser({
+                id: createdProfile.id,
+                fullName: createdProfile.full_name,
+                email: authUser.email as string,
+                phone: createdProfile.phone,
+                address: createdProfile.address,
+                role: createdProfile.role,
+              });
               
-              // If we still can't create/find profile, handle gracefully
-              console.error('💥 Cannot create or find profile');
+              // Clear registration data
+              setRegistrationData(null);
+              console.log('🎉 Emergency profile creation successful!');
+            } else {
+              // All strategies failed - handle gracefully
+              console.error('💥 All emergency profile creation strategies failed');
               
               // Clear registration data to stop infinite loops
               setRegistrationData(null);
@@ -148,21 +176,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               await supabase.auth.signOut();
               return;
             }
-            
-            console.log('✅ Emergency profile created successfully:', createdProfile);
-            
-            // Set the user with the newly created profile
-            setUser({
-              id: createdProfile.id,
-              fullName: createdProfile.full_name,
-              email: authUser.email as string,
-              phone: createdProfile.phone,
-              address: createdProfile.address,
-              role: createdProfile.role,
-            });
-            
-            // Clear registration data
-            setRegistrationData(null);
           } catch (emergencyError) {
             console.error('❌ Emergency profile creation failed completely:', emergencyError);
             
@@ -232,6 +245,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Store registration data before signup
       setRegistrationData(userData);
       
+      // Add a small delay to ensure database is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Sign up user with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
@@ -261,6 +277,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           throw new Error('Password harus minimal 6 karakter.');
         } else if (error.message.includes('Signup is disabled')) {
           throw new Error('Pendaftaran sedang dinonaktifkan. Silakan coba lagi nanti.');
+        } else if (error.message.includes('Database error') || error.message.includes('500')) {
+          throw new Error('Terjadi masalah dengan database. Silakan coba lagi dalam beberapa saat.');
         } else {
           throw new Error(`Registrasi gagal: ${error.message}`);
         }
@@ -285,18 +303,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         role: userData.role
       };
       
-      const { data: profileResult, error: insertError } = await supabase
+      // Try multiple times with different approaches
+      let profileResult = null;
+      let insertError = null;
+      
+      // Attempt 1: Try insert
+      console.log('🔄 Attempt 1: Inserting profile...');
+      const insertResult = await supabase
         .from('profiles')
         .insert(profileData)
         .select()
         .single();
         
-      if (insertError) {
-        console.error('❌ Manual profile creation failed:', insertError);
+      if (insertResult.error) {
+        insertError = insertResult.error;
+        console.error('❌ Insert failed:', insertError);
         
-        // If it's a duplicate error, try to fetch existing profile
-        if (insertError.code === '23505') {
-          console.log('🔍 Profile might already exist, trying to fetch...');
+        // Attempt 2: Try upsert if insert failed
+        console.log('🔄 Attempt 2: Trying upsert...');
+        const upsertResult = await supabase
+          .from('profiles')
+          .upsert(profileData, {
+            onConflict: 'id',
+            ignoreDuplicates: false
+          })
+          .select()
+          .single();
+          
+        if (upsertResult.error) {
+          console.error('❌ Upsert also failed:', upsertResult.error);
+          
+          // Attempt 3: Try to fetch existing profile
+          console.log('🔄 Attempt 3: Checking for existing profile...');
           const { data: existingProfile } = await supabase
             .from('profiles')
             .select('*')
@@ -304,27 +342,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             .single();
             
           if (existingProfile) {
-            console.log('✅ Found existing profile, registration complete');
+            console.log('✅ Found existing profile after failed creation attempts');
+            profileResult = existingProfile;
+          } else {
+            // All attempts failed
+            console.error('🧹 All profile creation attempts failed, cleaning up auth user');
             setRegistrationData(null);
             
-            // Wait for auth state to settle
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return true;
+            try {
+              await supabase.auth.signOut();
+            } catch (signOutError) {
+              console.error('❌ Failed to sign out user:', signOutError);
+            }
+            
+            throw new Error(`Gagal membuat profil pengguna. Error: ${insertError?.message || 'Unknown error'}`);
           }
+        } else {
+          profileResult = upsertResult.data;
+          console.log('✅ Upsert successful');
         }
-        
-        // If profile creation fails completely, clean up the auth user
-        console.error('🧹 Cleaning up auth user due to profile creation failure');
-        setRegistrationData(null);
-        
-        // Try to sign out the user
-        try {
-          await supabase.auth.signOut();
-        } catch (signOutError) {
-          console.error('❌ Failed to sign out user:', signOutError);
-        }
-        
-        throw new Error(`Gagal membuat profil pengguna: ${insertError.message}`);
+      } else {
+        profileResult = insertResult.data;
+        console.log('✅ Insert successful');
       }
       
       console.log('✅ Profile created successfully:', profileResult);
