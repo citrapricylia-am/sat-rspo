@@ -20,13 +20,59 @@
  * }
  */
 
-import { supabase } from '../../../lib/supabaseClient.js';
-import { 
-  createSuccessResponse, 
-  createErrorResponse, 
-  isValidUUID
-} from '../../../lib/utils.js';
-import { withApiMiddleware, withAuth } from '../../../lib/middleware.js';
+import { supabase } from '../../src/lib/supabase-config';
+// Utility functions
+function createSuccessResponse(data, message = 'Success', status = 200) {
+  return {
+    response: {
+      success: true,
+      data,
+      message
+    },
+    status
+  };
+}
+
+function createErrorResponse(message, status = 400) {
+  return {
+    response: {
+      success: false,
+      error: message
+    },
+    status
+  };
+}
+
+function isValidUUID(uuid) {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
+
+// Middleware functions
+function withApiMiddleware(allowedMethods) {
+  return function(handler) {
+    return function(req, res) {
+      if (!allowedMethods.includes(req.method)) {
+        return res.status(405).json({ error: 'Method not allowed' });
+      }
+      return handler(req, res);
+    };
+  };
+}
+
+function withAuth(handler) {
+  return async function(req, res) {
+    // For now, we'll need to implement proper auth middleware
+    // This is a simplified version
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    // TODO: Implement proper JWT verification
+    req.user = { id: 'temp-user-id' }; // This should be extracted from JWT
+    return handler(req, res);
+  };
+}
 
 async function assessmentGetHandler(req, res) {
   const { id } = req.query;

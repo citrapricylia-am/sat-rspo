@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase-config';
+import { supabase } from '../../src/lib/supabase-config';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });

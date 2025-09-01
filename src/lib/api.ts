@@ -62,17 +62,17 @@ export const api = {
   async saveAssessmentResult(result: AssessmentResult) {
     console.log('🔄 Saving assessment result:', result);
     
-    // Simpan hasil ke tabel 'assessment_results'
+    // Simpan hasil ke tabel 'assessments' sesuai dengan schema database
     const { data, error } = await supabase
-      .from('assessment_results')
+      .from('assessments')
       .insert([
         {
           user_id: result.userId,
-          stage: result.stage,
-          answers: result.answers,
+          stage: `stage${result.stage}`,
+          answers_json: result.answers,
           total_score: result.totalScore,
           max_score: result.maxScore,
-          percentage: result.percentage,
+          completed_at: new Date().toISOString(),
         },
       ]);
 

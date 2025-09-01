@@ -31,19 +31,19 @@ export const stage1Questions: Question[] = [
     id: "q1",
     text: "1. Apakah Bapak/Ibu saat ini tergabung dalam kelompok petani yang sudah terdaftar secara hukum, atau sedang dalam proses bergabung?",
     options: [
-      { value: "ya", label: "Ya, Sudah Terdaftar", score: 2 },
-      { value: "proses", label: "Sedang Proses Bergabung", score: 1 },
-      { value: "tidak", label: "Tidak Terdaftar", score: 0 },
+      { value: "sudah_terdaftar", label: "Ya, Sudah Terdaftar", score: 2 },
+      { value: "sedang_proses_bergabung", label: "Sedang Proses Bergabung", score: 1 },
+      { value: "tidak_terdaftar", label: "Tidak Terdaftar", score: 0 },
     ],
   },
   {
     id: "q2",
     text: "2. Jika Bapak/Ibu tergabung dalam kelompok, apakah pengambilan keputusan di kelompok dilakukan secara adil dan terbuka? Jika belum tergabung, apakah Bapak/Ibu memahami pentingnya sistem seperti itu?",
     options: [
-      { value: "keputusan", label: "Ya, Pengambilan Keputusan Adil", score: 2 },
-      { value: "sistem", label: "Sedang Proses Membangun Sistem", score: 1 },
+      { value: "pengambilan_keputusan_adil", label: "Ya, Pengambilan Keputusan Adil", score: 2 },
+      { value: "sedang_proses_membangun_sistem", label: "Sedang Proses Membangun Sistem", score: 1 },
       {
-        value: "tidak_memahami",
+        value: "tidak_memahami_pentingnya_sistem",
         label: "Tidak Memahami Pentingnya Sistem",
         score: 0,
       },
@@ -53,32 +53,32 @@ export const stage1Questions: Question[] = [
     id: "q3",
     text: "3. Apakah kelompok (jika sudah ada) memiliki dokumen tambahan sesuai aturan negara? Jika belum tergabung, apakah Bapak/Ibu mengetahui bahwa hal ini akan dibutuhkan saat proses sertifikasi?",
     options: [
-      { value: "memlikidokumentambahan", label: "Ya, Memiliki Dokumen Tambahan", score: 2 },
-      { value: "prosesmemperoleh dokumen", label: "Sedang Proses Memperoleh Dokumen", score: 1 },
-      { value: "tidakmemilikidokumen", label: "Tidak Memiliki Dokumen Tambahan", score: 0 },
+      { value: "memiliki_dokumen_tambahan", label: "Ya, Memiliki Dokumen Tambahan", score: 2 },
+      { value: "sedang_proses_memperoleh_dokumen", label: "Sedang Proses Memperoleh Dokumen", score: 1 },
+      { value: "tidak_memiliki_dokumen_tambahan", label: "Tidak Memiliki Dokumen Tambahan", score: 0 },
     ],
   },
   {
     id: "q4",
     text: "4. Apakah Bapak/Ibu sudah menandatangani pernyataan komitmen sebagai petani sawit berkelanjutan (Smallholder Declaration)?",
     options: [
-      { value: "menandatangani", label: "Ya, Sudah Menandatangani", score: 2 },
-      { value: "prosesmenandatangani", label: "Sedang Proses Menandatangani", score: 1 },
-      { value: "tidakmenandatangani", label: "Tidak Menandatangani", score: 0 },
+      { value: "sudah_menandatangani", label: "Ya, Sudah Menandatangani", score: 2 },
+      { value: "sedang_proses_menandatangani", label: "Sedang Proses Menandatangani", score: 1 },
+      { value: "tidak_menandatangani", label: "Tidak Menandatangani", score: 0 },
     ],
   },
   {
     id: "q5",
     text: "5. Apakah Bapak/Ibu bersedia menerapkan praktik pertanian yang baik di kebun sendiri sesuai prinsip RSPO?",
     options: [
-      { value: "bersedia", label: "Ya, Bersedia Menerapkan Praktik Baik", score: 2 },
+      { value: "bersedia_menerapkan_praktik_baik", label: "Ya, Bersedia Menerapkan Praktik Baik", score: 2 },
       {
-        value: "prosesmenerapkan",
+        value: "sedang_proses_menerapkan_praktik_baik",
         label: "Sedang Proses Menerapkan Praktik Baik",
         score: 1,
       },
       {
-        value: "tidakbersedia",
+        value: "tidak_bersedia_menerapkan_praktik_baik",
         label: "Tidak Bersedia Menerapkan Praktik Baik",
         score: 0,
       },
@@ -88,36 +88,36 @@ export const stage1Questions: Question[] = [
     id: "q6",
     text: "6. Apakah Bapak/Ibu berkomitmen menerapkan praktik pertanian yang baik (GAP) di kebun?",
     options: [
-      { value: "yaberkomitmen", label: "Ya, Berkomitmen Menerapkan GAP", score: 2 },
-      { value: "prosesmenerapkan", label: "Sedang Proses Menerapkan GAP", score: 1 },
-      { value: "tidakmenerapkan", label: "Tidak Berkomitmen Menerapkan GAP", score: 0 },
+      { value: "berkomitmen_menerapkan_gap", label: "Ya, Berkomitmen Menerapkan GAP", score: 2 },
+      { value: "sedang_proses_menerapkan_gap", label: "Sedang Proses Menerapkan GAP", score: 1 },
+      { value: "tidak_berkomitmen_menerapkan_gap", label: "Tidak Berkomitmen Menerapkan GAP", score: 0 },
     ],
   },
   {
     id: "q7",
     text: "7. Apakah Bapak/Ibu memiliki peta atau titik koordinat kebun, dan dapat menunjukkan bukti hak atas lahan tersebut (misalnya surat, warisan, hak adat)?",
     options: [
-      { value: "bukti", label: "Ya, Memiliki Peta dan Bukti Hak Lahan", score: 2 },
+      { value: "memiliki_peta_dan_bukti_hak_lahan", label: "Ya, Memiliki Peta dan Bukti Hak Lahan", score: 2 },
       {
-        value: "prosesmemperoleh",
+        value: "sedang_proses_memperoleh_peta_dan_bukti",
         label: "Sedang Proses Memperoleh Peta dan Bukti Hak Lahan",
         score: 1,
       },
       {
-        value: "tidakbukti",
+        value: "tidak_memiliki_peta_atau_bukti",
         label: "Tidak Memiliki Peta atau Bukti Hak Lahan",
         score: 0,
       },
     ],
-    triggerSubQuestions: "tidak",
+    triggerSubQuestions: "tidak_memiliki_peta_atau_bukti",
     subQuestions: [
       {
         id: "q7_sub1",
         text: "7a. Jika belum memiliki dokumen, apakah Bapak/Ibu sedang dalam proses pengurusan legalisasi hak atas lahan tersebut?",
         options: [
-          { value: "yalegalisasi", label: "Ya, Sedang Proses Legalisasi", score: 2 },
-          { value: "proseslegalisasi", label: "Sedang Proses Legalisasi", score: 1 },
-          { value: "tidaklegalisasi", label: "Tidak Sedang Proses Legalisasi", score: 0 },
+          { value: "sedang_proses_legalisasi_hak_lahan", label: "Ya, Sedang Proses Legalisasi", score: 2 },
+          { value: "sedang_proses_legalisasi_lahan", label: "Sedang Proses Legalisasi", score: 1 },
+          { value: "tidak_sedang_proses_legalisasi", label: "Tidak Sedang Proses Legalisasi", score: 0 },
         ],
       },
     ],
@@ -126,36 +126,36 @@ export const stage1Questions: Question[] = [
     id: "q8",
     text: "8. Apakah lahan yang Bapak/Ibu miliki tidak berasal dari pengambilalihan milik masyarakat adat, komunitas lokal, atau pengguna lain?",
     options: [
-      { value: "ya", label: "Ya, Mengambil Alih Lahan Masyarakat", score: 2 },
+      { value: "mengambil_alih_lahan_masyarakat", label: "Ya, Mengambil Alih Lahan Masyarakat", score: 2 },
       {
-        value: "proses",
+        value: "sedang_proses_mendapatkan_persetujuan",
         label: "Sedang Proses Mendapatkan Persetujuan Masyarakat",
         score: 1,
       },
       {
-        value: "tidak",
+        value: "tidak_mengambil_alih_lahan_masyarakat",
         label: "Tidak Mengambil Alih Lahan Masyarakat",
         score: 0,
       },
     ],
-    triggerSubQuestions: "ya",
+    triggerSubQuestions: "mengambil_alih_lahan_masyarakat",
     subQuestions: [
       {
         id: "q8_sub1",
         text: "8a. Jika pernah mengambil lahan dari orang lain, apakah hal itu dilakukan dengan persetujuan dan tanpa paksaan?",
         options: [
           {
-            value: "ya",
+            value: "mendapatkan_persetujuan_masyarakat",
             label: "Ya, Mendapatkan Persetujuan Masyarakat",
             score: 2,
           },
           {
-            value: "proses",
+            value: "sedang_proses_mendapatkan_persetujuan_masyarakat",
             label: "Sedang Proses Mendapatkan Persetujuan",
             score: 1,
           },
           {
-            value: "tidak",
+            value: "tidak_mendapatkan_persetujuan_masyarakat",
             label: "Tidak Mendapatkan Persetujuan Masyarakat",
             score: 0,
           },
@@ -167,41 +167,41 @@ export const stage1Questions: Question[] = [
     id: "q9",
     text: "9. Apakah Bapak/Ibu mengetahui apa itu persetujuan bebas, didahului, dan diinformasikan (FPIC)?",
     options: [
-      { value: "ya", label: "Ya, Mengetahui FPIC", score: 2 },
-      { value: "proses", label: "Sedang Proses Memahami FPIC", score: 1 },
-      { value: "tidak", label: "Tidak Mengetahui FPIC", score: 0 },
+      { value: "mengetahui_fpic", label: "Ya, Mengetahui FPIC", score: 2 },
+      { value: "sedang_proses_memahami_fpic", label: "Sedang Proses Memahami FPIC", score: 1 },
+      { value: "tidak_mengetahui_fpic", label: "Tidak Mengetahui FPIC", score: 0 },
     ],
   },
   {
     id: "q10",
     text: "10. Apakah kebun Bapak/Ibu sedang dalam sengketa atau konflik dengan masyarakat lain?",
     options: [
-      { value: "ya", label: "Ya, Sedang Dalam Sengketa", score: 2 },
+      { value: "sedang_dalam_sengketa", label: "Ya, Sedang Dalam Sengketa", score: 2 },
       {
-        value: "proses",
+        value: "sedang_proses_penyelesaian_sengketa",
         label: "Sedang Proses Penyelesaian Sengketa",
         score: 1,
       },
-      { value: "tidak", label: "Tidak Ada Sengketa", score: 0 },
+      { value: "tidak_ada_sengketa", label: "Tidak Ada Sengketa", score: 0 },
     ],
     subQuestions: [
       {
         id: "q10_sub1",
         text: "10a. Jika ya, apakah Bapak/Ibu bersedia untuk menyelesaikannya melalui cara yang adil dan disepakati semua pihak?",
-        triggerValue: "ya",
+        triggerValue: "sedang_dalam_sengketa",
         options: [
           {
-            value: "bersedia",
+            value: "bersedia_menyelesaikan_sengketa_adil",
             label: "Ya, Bersedia Menyelesaikan Sengketa Secara Adil",
             score: 2,
           },
           {
-            value: "sedang",
+            value: "sedang_proses_penyelesaian_sengketa_adil",
             label: "Sedang Proses Penyelesaian Sengketa",
             score: 1,
           },
           {
-            value: "belum",
+            value: "belum_bersedia_menyelesaikan_sengketa",
             label: "Belum Bersedia Menyelesaikan Sengketa",
             score: 0,
           },
@@ -210,16 +210,16 @@ export const stage1Questions: Question[] = [
       {
         id: "q10_sub2",
         text: "10b. Jika tidak ada sengketa, apakah Bapak/Ibu memiliki bukti atau kesaksian bahwa lahan tersebut diterima oleh masyarakat sekitar?",
-        triggerValue: "tidak",
+        triggerValue: "tidak_ada_sengketa",
         options: [
-          { value: "ya", label: "Ya, Memiliki Catatan atau Bukti", score: 2 },
+          { value: "memiliki_catatan_atau_bukti", label: "Ya, Memiliki Catatan atau Bukti", score: 2 },
           {
-            value: "proses",
+            value: "sedang_proses_mengumpulkan_bukti",
             label: "Sedang Proses Mengumpulkan Bukti",
             score: 1,
           },
           {
-            value: "tidak",
+            value: "tidak_memiliki_catatan_atau_bukti",
             label: "Tidak Memiliki Catatan atau Bukti",
             score: 0,
           },
@@ -231,14 +231,14 @@ export const stage1Questions: Question[] = [
     id: "q11",
     text: "11. Apakah kebun Bapak/Ibu tidak berada di kawasan taman nasional, hutan lindung, atau kawasan konservasi lain?",
     options: [
-      { value: "ya", label: "Ya, Berada Di Kawasan Konservasi", score: 2 },
+      { value: "berada_di_kawasan_konservasi", label: "Ya, Berada Di Kawasan Konservasi", score: 2 },
       {
-        value: "proses",
+        value: "sedang_proses_verifikasi_lokasi",
         label: "Sedang Proses Verifikasi Lokasi Kebun",
         score: 1,
       },
       {
-        value: "tidak",
+        value: "tidak_di_kawasan_konservasi",
         label: "Tidak, Kebun Tidak di Kawasan Konservasi",
         score: 0,
       },
@@ -248,40 +248,40 @@ export const stage1Questions: Question[] = [
     id: "q12",
     text: "12. Apakah Bapak/Ibu mengetahui bahwa kebun tidak boleh berada di dalam wilayah yang dilindungi secara hukum?",
     options: [
-      { value: "ya", label: "Ya, Mengetahui Hal Ini", score: 2 },
+      { value: "mengetahui_hal_ini", label: "Ya, Mengetahui Hal Ini", score: 2 },
       {
-        value: "proses",
+        value: "sedang_proses_verifikasi_lokasi_kebun",
         label: "Sedang Proses Verifikasi Lokasi Kebun",
         score: 1,
       },
-      { value: "tidak", label: "Tidak Mengetahui Hal Ini", score: 0 },
+      { value: "tidak_mengetahui_hal_ini", label: "Tidak Mengetahui Hal Ini", score: 0 },
     ],
   },
   {
     id: "q13",
     text: "13. Apakah Bapak/Ibu memiliki rencana membuka kebun baru dalam waktu dekat?",
     options: [
-      { value: "ya", label: "Ya, Berencana Membuka Kebun Baru", score: 2 },
+      { value: "berencana_membuka_kebun_baru", label: "Ya, Berencana Membuka Kebun Baru", score: 2 },
       {
-        value: "proses",
+        value: "sedang_proses_membuka_kebun_baru",
         label: "Sedang Proses Membuka Kebun Baru",
         score: 1,
       },
-      { value: "tidak", label: "Tidak Berencana Membuka Kebun Baru", score: 0 },
+      { value: "tidak_berencana_membuka_kebun_baru", label: "Tidak Berencana Membuka Kebun Baru", score: 0 },
     ],
     subQuestions: [
       {
         id: "q13_sub1",
         text: "13a. Jika ya, apakah Bapak/Ibu memahami bahwa tidak boleh membuka lahan dari masyarakat tanpa persetujuan mereka?",
-        triggerValue: "ya",
+        triggerValue: "berencana_membuka_kebun_baru",
         options: [
-          { value: "ya", label: "Ya, Memahami Hal Ini", score: 2 },
+          { value: "memahami_hal_ini", label: "Ya, Memahami Hal Ini", score: 2 },
           {
-            value: "proses",
+            value: "sedang_proses_memahami_hal_ini",
             label: "Sedang Proses Memahami Hal Ini",
             score: 1,
           },
-          { value: "tidak", label: "Tidak Memahami Hal Ini", score: 0 },
+          { value: "tidak_memahami_hal_ini", label: "Tidak Memahami Hal Ini", score: 0 },
         ],
       },
     ],
@@ -291,17 +291,17 @@ export const stage1Questions: Question[] = [
     text: "14. Apakah Bapak/Ibu menggunakan tenaga kerja dari luar keluarga inti untuk membantu kegiatan di kebun? (Termasuk tenaga harian lepas, tetangga yang dibayar, buruh panen musiman, dll)",
     options: [
       {
-        value: "ya",
+        value: "menggunakan_tenaga_kerja_luar_keluarga",
         label: "Ya, Menggunakan Tenaga Kerja Luar Keluarga",
         score: 2,
       },
       {
-        value: "proses",
+        value: "sedang_proses_menggunakan_tenaga_kerja",
         label: "Sedang Proses Menggunakan Tenaga Kerja",
         score: 1,
       },
       {
-        value: "tidak",
+        value: "tidak_menggunakan_tenaga_kerja_luar_keluarga",
         label: "Tidak Menggunakan Tenaga Kerja Luar Keluarga",
         score: 0,
       },
@@ -310,16 +310,16 @@ export const stage1Questions: Question[] = [
       {
         id: "q14_sub1",
         text: "14a. Apakah semua tenaga kerja di kebun Bapak/Ibu bekerja secara sukarela dan tanpa paksaan? ",
-        triggerValue: "ya",
+        triggerValue: "menggunakan_tenaga_kerja_luar_keluarga",
         options: [
-          { value: "ya", label: "Ya, Semua Tenaga Kerja Sukarela", score: 2 },
+          { value: "semua_tenaga_kerja_sukarela", label: "Ya, Semua Tenaga Kerja Sukarela", score: 2 },
           {
-            value: "proses",
+            value: "sedang_proses_memberikan_kontrak_kerja",
             label: "Sedang Proses Memberikan Kontrak Kerja",
             score: 1,
           },
           {
-            value: "tidak",
+            value: "tidak_semua_tenaga_kerja_sukarela",
             label: "Tidak Semua Tenaga Kerja Sukarela",
             score: 0,
           },
@@ -328,20 +328,20 @@ export const stage1Questions: Question[] = [
       {
         id: "q14_sub2",
         text: "14b. Apakah Bapak/Ibu mengetahui dan memahami bahwa menggunakan tenaga kerja paksa tidak diperbolehkan dalam standar RSPO?",
-        triggerValue: "ya",
+        triggerValue: "menggunakan_tenaga_kerja_luar_keluarga",
         options: [
           {
-            value: "ya",
+            value: "memahami_pentingnya_kontrak_kerja",
             label: "Ya, Memahami Pentingnya Kontrak Kerja",
             score: 2,
           },
           {
-            value: "proses",
+            value: "sedang_proses_memahami_pentingnya_kontrak",
             label: "Sedang Proses Memahami Pentingnya Kontrak Kerja",
             score: 1,
           },
           {
-            value: "tidak",
+            value: "tidak_memahami_pentingnya_kontrak",
             label: "Tidak Memahami Pentingnya Kontrak Kerja",
             score: 0,
           },
@@ -353,31 +353,31 @@ export const stage1Questions: Question[] = [
     id: "q15",
     text: "15. Apakah ada anak-anak di bawah 15 tahun atau belum cukup umur sesuai hukum yang membantu di kebun Bapak/Ibu? ",
     options: [
-      { value: "ya", label: "Ya, Ada Anak-anak Bekerja", score: 2 },
+      { value: "ada_anak_bekerja", label: "Ya, Ada Anak-anak Bekerja", score: 2 },
       {
-        value: "proses",
+        value: "sedang_proses_memastikan_anak_bekerja",
         label: "Sedang Proses Memastikan Anak-anak Bekerja",
         score: 1,
       },
-      { value: "tidak", label: "Tidak Ada Anak-anak Bekerja", score: 0 },
+      { value: "tidak_ada_anak_bekerja", label: "Tidak Ada Anak-anak Bekerja", score: 0 },
     ],
     subQuestions: [
       {
         id: "q15_sub1",
         text: "15a. Jika ada anak-anak yang membantu di kebun, apakah mereka hanya membantu keluarga, tidak mengganggu sekolah, dan tidak melakukan pekerjaan berat?",
-        triggerValue: "ya",
+        triggerValue: "ada_anak_bekerja",
         options: [
           {
-            value: "ya",
+            value: "anak_hanya_membantu_keluarga",
             label: "Ya, Anak-anak Hanya Membantu Keluarga",
             score: 2,
           },
           {
-            value: "proses",
+            value: "sedang_proses_memastikan_anak_membantu_keluarga",
             label: "Sedang Proses Memastikan Anak-anak Membantu Keluarga",
             score: 1,
           },
-          { value: "tidak", label: "Tidak, Anak-anak Bekerja Berat", score: 0 },
+          { value: "anak_bekerja_berat", label: "Tidak, Anak-anak Bekerja Berat", score: 0 },
         ],
       },
     ],
@@ -386,14 +386,14 @@ export const stage1Questions: Question[] = [
     id: "q16",
     text: "16. Apakah Bapak/Ibu membayar pekerja (jika ada) sesuai dengan ketentuan upah minimum atau aturan lainnya yang berlaku di daerah Bapak/Ibu?",
     options: [
-      { value: "ya", label: "Ya, Membayar Pekerja Sesuai Aturan", score: 2 },
+      { value: "membayar_pekerja_sesuai_aturan", label: "Ya, Membayar Pekerja Sesuai Aturan", score: 2 },
       {
-        value: "proses",
+        value: "sedang_proses_memastikan_pembayaran",
         label: "Sedang Proses Memastikan Pembayaran",
         score: 1,
       },
       {
-        value: "tidak",
+        value: "tidak_membayar_pekerja_sesuai_aturan",
         label: "Tidak Membayar Pekerja Sesuai Aturan",
         score: 0,
       },
@@ -403,14 +403,14 @@ export const stage1Questions: Question[] = [
     id: "q17",
     text: "17. Apakah pekerja di kebun Bapak/Ibu tahu bahwa mereka berhak untuk menyampaikan keluhan jika ada masalah dalam pekerjaan?",
     options: [
-      { value: "ya", label: "Ya, Pekerja Tahu Hak Keluhan", score: 2 },
+      { value: "pekerja_tahu_hak_keluhan", label: "Ya, Pekerja Tahu Hak Keluhan", score: 2 },
       {
-        value: "proses",
+        value: "sedang_proses_memberitahu_pekerja",
         label: "Sedang Proses Memberitahu Pekerja",
         score: 1,
       },
       {
-        value: "tidak",
+        value: "pekerja_tidak_tahu_hak_keluhan",
         label: "Tidak, Pekerja Tidak Tahu Hak Keluhan",
         score: 0,
       },
@@ -420,28 +420,28 @@ export const stage1Questions: Question[] = [
     id: "q18",
     text: "18. Apakah Bapak/Ibu sudah menyediakan kondisi kerja yang aman bagi pekerja di kebun, termasuk untuk keluarga sendiri jika membantu?",
     options: [
-      { value: "ya", label: "Ya, Kondisi Kerja Aman", score: 2 },
+      { value: "kondisi_kerja_aman", label: "Ya, Kondisi Kerja Aman", score: 2 },
       {
-        value: "proses",
+        value: "sedang_proses_menciptakan_kondisi_aman",
         label: "Sedang Proses Menciptakan Kondisi Aman",
         score: 1,
       },
-      { value: "tidak", label: "Tidak, Kondisi Kerja Tidak Aman", score: 0 },
+      { value: "kondisi_kerja_tidak_aman", label: "Tidak, Kondisi Kerja Tidak Aman", score: 0 },
     ],
     subQuestions: [
       {
         id: "q18_sub1",
         text: "18a.  Apakah Bapak/Ibu tahu bahwa menyediakan alat pelindung diri dan lingkungan kerja yang aman adalah bagian dari standar?",
-        triggerValue: "ya",
+        triggerValue: "kondisi_kerja_aman",
         options: [
-          { value: "ya", label: "Ya, Mengetahui Pentingnya APD", score: 2 },
+          { value: "mengetahui_pentingnya_apd", label: "Ya, Mengetahui Pentingnya APD", score: 2 },
           {
-            value: "proses",
+            value: "sedang_proses_memahami_pentingnya_apd",
             label: "Sedang Proses Memahami Pentingnya APD",
             score: 1,
           },
           {
-            value: "tidak",
+            value: "tidak_mengetahui_pentingnya_apd",
             label: "Tidak Mengetahui Pentingnya APD",
             score: 0,
           },

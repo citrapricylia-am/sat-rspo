@@ -44,36 +44,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (session) {
         const { user: authUser } = session;
 
-        // Check if user profile exists in database (try 'users' first, fallback to 'profiles')
+        // Check if user profile exists in the profiles table
         let { data: userData, error } = await supabase
-          .from('users')
+          .from('profiles')
           .select('*')
           .eq('id', authUser.id)
           .single();
-          
-        // If 'users' table doesn't exist, try 'profiles' table
-        if (error && error.code === 'PGRST116') {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', authUser.id)
-            .single();
-            
-          if (!profileError && profileData) {
-            // Convert profile data to match expected format
-            userData = {
-              id: profileData.id,
-              full_name: profileData.full_name,
-              email: profileData.email,
-              phone: profileData.phone,
-              address: profileData.address,
-              role: profileData.role
-            };
-            error = null;
-          } else {
-            error = profileError;
-          }
-        }
 
         if (error && error.code !== 'PGRST116') {
           console.error("❌ Error fetching user data:", error);
@@ -103,10 +79,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             role: registrationData.role,
           });
           
-          // Try to insert into 'users' table first
-          let insertError = null;
-          const { error: usersInsertError } = await supabase
-            .from('users')
+          // Insert into profiles table
+          const { error: insertError } = await supabase
+            .from('profiles')
             .insert({
               id: authUser.id,
               full_name: registrationData.fullName,
@@ -116,57 +91,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               role: registrationData.role,
             });
             
-          if (usersInsertError) {
-            console.log('⚠️ Users table insert failed, trying profiles table:', usersInsertError.message);
-            // If 'users' table doesn't exist, try 'profiles' table
-            const { error: profilesInsertError } = await supabase
-              .from('profiles')
-              .insert({
-                id: authUser.id,
-                full_name: registrationData.fullName,
-                email: registrationData.email,
-                phone: registrationData.phone,
-                address: registrationData.address,
-                role: registrationData.role,
-              });
-            insertError = profilesInsertError;
-          } else {
-            insertError = usersInsertError;
-          }
-            
           if (insertError) {
             console.error("❌ Error inserting new user:", insertError);
           } else {
             console.log('✅ User profile created successfully');
-            // Fetch the newly created user data to confirm from the correct table
-            let { data: newUserData, error: fetchError } = await supabase
-              .from('users')
+            // Fetch the newly created user data to confirm
+            const { data: newUserData, error: fetchError } = await supabase
+              .from('profiles')
               .select('*')
               .eq('id', authUser.id)
               .single();
-              
-            // If 'users' doesn't exist, try 'profiles'
-            if (fetchError && fetchError.code === 'PGRST116') {
-              const { data: profileData, error: profileFetchError } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', authUser.id)
-                .single();
-                
-              if (!profileFetchError && profileData) {
-                newUserData = {
-                  id: profileData.id,
-                  full_name: profileData.full_name,
-                  email: profileData.email,
-                  phone: profileData.phone,
-                  address: profileData.address,
-                  role: profileData.role
-                };
-                fetchError = null;
-              } else {
-                fetchError = profileFetchError;
-              }
-            }
               
             if (fetchError) {
               console.error("❌ Error fetching new user data:", fetchError);

@@ -29,6 +29,34 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
+    if (!formData.fullName.trim()) {
+      toast({
+        title: "Error",
+        description: "Nama lengkap harus diisi",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!formData.phone.trim()) {
+      toast({
+        title: "Error",
+        description: "Nomor telepon harus diisi",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!formData.address.trim()) {
+      toast({
+        title: "Error",
+        description: "Alamat harus diisi",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Error",
