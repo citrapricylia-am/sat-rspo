@@ -166,38 +166,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       console.log('✅ Auth signup successful:', data.user?.id);
       
-      // Wait a moment for the database trigger to create the profile
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Check if profile was created by trigger, if not create manually
-      const { data: profileCheck } = await supabase
+      // Since we disabled the trigger, we'll always create the profile manually
+      console.log('🔄 Creating user profile manually...');
+      const { error: insertError } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('id', data.user?.id)
-        .single();
+        .insert({
+          id: data.user?.id,
+          full_name: userData.fullName,
+          email: userData.email,
+          phone: userData.phone,
+          address: userData.address,
+          role: userData.role
+        });
         
-      if (!profileCheck) {
-        console.log('⚠️ Trigger didn\'t create profile, creating manually...');
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user?.id,
-            full_name: userData.fullName,
-            email: userData.email,
-            phone: userData.phone,
-            address: userData.address,
-            role: userData.role
-          });
-          
-        if (insertError) {
-          console.error('❌ Manual profile creation failed:', insertError);
-          throw new Error('Failed to create user profile');
-        }
-        
-        console.log('✅ Profile created manually');
-      } else {
-        console.log('✅ Profile created by trigger');
+      if (insertError) {
+        console.error('❌ Manual profile creation failed:', insertError);
+        // If profile creation fails, we should clean up the auth user
+        await supabase.auth.signOut();
+        throw new Error(`Failed to create user profile: ${insertError.message}`);
       }
+      
+      console.log('✅ Profile created successfully with phone:', userData.phone, 'and address:', userData.address);
       
       return true;
     } catch (e) {
