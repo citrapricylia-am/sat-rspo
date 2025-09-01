@@ -200,20 +200,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      console.log('🔑 Attempting login for:', email);
+      console.log('🔑 LOGIN ATTEMPT STARTED for:', email);
+      console.log('📋 Current user state:', user ? 'LOGGED IN' : 'NOT LOGGED IN');
       
       // Clean email input
       const cleanEmail = email.trim().toLowerCase();
+      console.log('🧹 Cleaned email:', cleanEmail);
       
+      // Call the API login function
+      console.log('🚀 Calling Supabase auth.signInWithPassword...');
       const result = await api.login({ email: cleanEmail, password });
-      console.log('✅ Login successful, waiting for auth state change...');
+      console.log('✅ Supabase login successful, user data:', {
+        id: result.id,
+        email: result.email
+      });
       
-      // Wait a moment for the auth state change to complete
+      console.log('⏳ Waiting for auth state change to complete...');
+      
+      // Wait for auth state change to complete
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      console.log('🎉 LOGIN PROCESS COMPLETED SUCCESSFULLY!');
       return true;
     } catch (e) {
-      console.error('❌ Login failed:', e);
+      console.error('❌ LOGIN FAILED with error:', e);
+      console.error('📊 Error details:', {
+        name: e.name,
+        message: e.message,
+        stack: e.stack
+      });
       throw e; // Re-throw to show error message to user
     }
   };

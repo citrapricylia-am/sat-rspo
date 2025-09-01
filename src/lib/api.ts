@@ -46,8 +46,11 @@ export const api = {
         console.error('❌ Login failed:', {
           message: authError.message,
           status: authError.status,
-          name: authError.name
+          name: authError.name,
+          cause: authError.cause
         });
+              
+        console.log('🔍 Login error details for debugging:', authError);
         
         // Provide more specific error messages
         if (authError.message.includes('Invalid login credentials')) {
