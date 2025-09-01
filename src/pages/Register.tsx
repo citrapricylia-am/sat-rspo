@@ -103,11 +103,24 @@ const Register = () => {
       
       // Display the specific error message from AuthContext
       const errorMessage = error instanceof Error ? error.message : 'Gagal mendaftarkan akun. Silakan coba lagi.';
+      
+      // Check if it's a duplicate email error
+      const isDuplicateEmail = errorMessage.includes('sudah terdaftar') || errorMessage.includes('already registered');
+      
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive"
+        variant: "destructive",
+        action: isDuplicateEmail ? (
+          <button 
+            onClick={() => navigate('/login')}
+            className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm hover:bg-primary/90"
+          >
+            Login
+          </button>
+        ) : undefined
       });
+      
       console.error('Registration error:', error);
     } finally {
       setIsLoading(false);

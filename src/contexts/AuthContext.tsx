@@ -44,6 +44,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (session) {
         const { user: authUser } = session;
 
+        // Prevent multiple simultaneous profile fetches for the same user
+        if (user?.id === authUser.id) {
+          console.log('📦 User already set, skipping profile fetch');
+          return;
+        }
+
         // Check if user profile exists in the profiles table
         console.log('🔍 Fetching profile for user:', authUser.id);
         let { data: userData, error } = await supabase
@@ -101,35 +107,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             
             const { data: createdProfile, error: createError } = await supabase
               .from('profiles')
-              .insert(profileData)
+              .upsert(profileData, {
+                onConflict: 'id',
+                ignoreDuplicates: false
+              })
               .select()
               .single();
               
             if (createError) {
               console.error('❌ Failed to create emergency profile:', createError);
               
-              // If it's a duplicate key error, try to fetch existing profile
-              if (createError.code === '23505') {
-                console.log('🔍 Profile might exist, trying to fetch again...');
-                const { data: existingProfile } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', authUser.id)
-                  .single();
-                  
-                if (existingProfile) {
-                  console.log('✅ Found existing profile after retry');
-                  setUser({
-                    id: existingProfile.id,
-                    fullName: existingProfile.full_name,
-                    email: authUser.email as string,
-                    phone: existingProfile.phone,
-                    address: existingProfile.address,
-                    role: existingProfile.role,
-                  });
-                  setRegistrationData(null); // Clear registration data
-                  return;
-                }
+              // Try one more time to fetch existing profile
+              const { data: existingProfile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', authUser.id)
+                .single();
+                
+              if (existingProfile) {
+                console.log('✅ Found existing profile after retry');
+                setUser({
+                  id: existingProfile.id,
+                  fullName: existingProfile.full_name,
+                  email: authUser.email as string,
+                  phone: existingProfile.phone,
+                  address: existingProfile.address,
+                  role: existingProfile.role,
+                });
+                setRegistrationData(null);
+                return;
               }
               
               // If we still can't create/find profile, handle gracefully
@@ -177,7 +183,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [registrationData]);
+  }, []); // Remove registrationData dependency to prevent loops
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -247,11 +253,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         // Provide more specific error messages
         if (error.message.includes('User already registered') || error.message.includes('already been registered')) {
-          throw new Error('Email sudah terdaftar. Silakan gunakan email lain atau login dengan email ini.');
+          // For duplicate emails, suggest login instead
+          throw new Error('Email sudah terdaftar. Silakan gunakan halaman login untuk masuk dengan email ini.');
         } else if (error.message.includes('Invalid email')) {
           throw new Error('Format email tidak valid. Silakan periksa kembali.');
         } else if (error.message.includes('Password')) {
           throw new Error('Password harus minimal 6 karakter.');
+        } else if (error.message.includes('Signup is disabled')) {
+          throw new Error('Pendaftaran sedang dinonaktifkan. Silakan coba lagi nanti.');
         } else {
           throw new Error(`Registrasi gagal: ${error.message}`);
         }
