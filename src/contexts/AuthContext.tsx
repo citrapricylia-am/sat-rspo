@@ -45,15 +45,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const { user: authUser } = session;
 
         // Check if user profile exists in the profiles table
+        console.log('🔍 Fetching profile for user:', authUser.id);
         let { data: userData, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', authUser.id)
           .single();
 
-        if (error && error.code !== 'PGRST116') {
-          console.error("❌ Error fetching user data:", error);
-          return;
+        if (error) {
+          console.error("❌ Error fetching user data:", {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
+          
+          // If it's not a "not found" error, this is a serious issue
+          if (error.code !== 'PGRST116') {
+            console.error('😨 This might be an RLS policy issue');
+            return;
+          }
         }
 
         if (userData) {
