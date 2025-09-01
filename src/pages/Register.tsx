@@ -77,8 +77,20 @@ const Register = () => {
 
     setIsLoading(true);
     
+    // Add a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+      toast({
+        title: "Timeout",
+        description: "Registrasi memakan waktu terlalu lama. Silakan coba lagi.",
+        variant: "destructive"
+      });
+    }, 30000); // 30 second timeout
+    
     try {
       const success = await register(formData);
+      clearTimeout(timeoutId); // Clear timeout if successful
+      
       if (success) {
         toast({
           title: "Pendaftaran Berhasil",
@@ -87,6 +99,8 @@ const Register = () => {
         navigate('/pretest');
       }
     } catch (error) {
+      clearTimeout(timeoutId); // Clear timeout on error
+      
       // Display the specific error message from AuthContext
       const errorMessage = error instanceof Error ? error.message : 'Gagal mendaftarkan akun. Silakan coba lagi.';
       toast({

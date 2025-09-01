@@ -127,12 +127,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     address: existingProfile.address,
                     role: existingProfile.role,
                   });
+                  setRegistrationData(null); // Clear registration data
                   return;
                 }
               }
               
-              // If we still can't create/find profile, sign out
-              console.error('💥 Cannot create or find profile, signing out user');
+              // If we still can't create/find profile, handle gracefully
+              console.error('💥 Cannot create or find profile');
+              
+              // Clear registration data to stop infinite loops
+              setRegistrationData(null);
+              
+              // Sign out the user since they have no profile
               await supabase.auth.signOut();
               return;
             }
@@ -148,8 +154,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               address: createdProfile.address,
               role: createdProfile.role,
             });
+            
+            // Clear registration data
+            setRegistrationData(null);
           } catch (emergencyError) {
             console.error('❌ Emergency profile creation failed completely:', emergencyError);
+            
+            // Clear registration data to prevent infinite loops
+            setRegistrationData(null);
+            
+            // Sign out the user
             await supabase.auth.signOut();
           }
         }
@@ -244,6 +258,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       if (!data.user) {
+        setRegistrationData(null);
         throw new Error('Registrasi gagal: User data tidak ditemukan');
       }
       
@@ -282,14 +297,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (existingProfile) {
             console.log('✅ Found existing profile, registration complete');
             setRegistrationData(null);
+            
+            // Wait for auth state to settle
+            await new Promise(resolve => setTimeout(resolve, 500));
             return true;
           }
         }
         
         // If profile creation fails completely, clean up the auth user
         console.error('🧹 Cleaning up auth user due to profile creation failure');
-        await supabase.auth.signOut();
         setRegistrationData(null);
+        
+        // Try to sign out the user
+        try {
+          await supabase.auth.signOut();
+        } catch (signOutError) {
+          console.error('❌ Failed to sign out user:', signOutError);
+        }
+        
         throw new Error(`Gagal membuat profil pengguna: ${insertError.message}`);
       }
       
@@ -297,6 +322,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('📋 Profile data - phone:', profileResult.phone, 'address:', profileResult.address);
       
       setRegistrationData(null);
+      
+      // Wait for auth state to settle
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       return true;
     } catch (e) {
       console.error('❌ Registration failed:', e);

@@ -23,8 +23,20 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     
+    // Add a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+      toast({
+        title: "Timeout",
+        description: "Login memakan waktu terlalu lama. Silakan coba lagi.",
+        variant: "destructive"
+      });
+    }, 15000); // 15 second timeout for login
+    
     try {
       const success = await login(formData.email, formData.password);
+      clearTimeout(timeoutId); // Clear timeout if successful
+      
       if (success) {
         toast({
           title: "Login Berhasil",
@@ -33,6 +45,8 @@ const Login = () => {
         navigate('/pretest');
       }
     } catch (error) {
+      clearTimeout(timeoutId); // Clear timeout on error
+      
       // Display the specific error message from AuthContext/API
       const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan. Silakan coba lagi.';
       toast({
