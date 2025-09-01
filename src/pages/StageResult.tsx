@@ -90,6 +90,13 @@ export default function StageResult() {
 
     (async () => {
       try {
+        console.log(`💾 Saving Stage ${stage} results:`, {
+          score,
+          maxScore,
+          percentage,
+          answersCount: answers.length
+        });
+        
         await api.saveAssessmentResult({
           userId: user.id,
           stage: stage as 1 | 2 | 3,
@@ -98,12 +105,19 @@ export default function StageResult() {
           maxScore,
           percentage,
         });
+        
         hasSavedRef.current = true;
+        console.log(`✅ Stage ${stage} results saved successfully`);
+        
+        toast({
+          title: "Hasil Tersimpan",
+          description: `Hasil ${getStageTitle()} berhasil disimpan ke database.`,
+        });
       } catch (e) {
-        console.error("Gagal menyimpan hasil assessment:", e);
+        console.error(`❌ Gagal menyimpan hasil Stage ${stage}:`, e);
         toast({
           title: "Error",
-          description: "Gagal menyimpan hasil asesmen. Silakan coba lagi.",
+          description: `Gagal menyimpan hasil ${getStageTitle()}. Silakan coba lagi.`,
           variant: "destructive"
         });
       }

@@ -68,6 +68,7 @@ export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({ children
 		const answers = assessmentData[stageKey];
 		return answers.reduce((total, answer) => {
 			let score = answer.score;
+			// Add sub-answers scores
 			if (answer.subAnswers) {
 				score += answer.subAnswers.reduce((subTotal, subAnswer) => subTotal + subAnswer.score, 0);
 			}
@@ -76,11 +77,6 @@ export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({ children
 	};
 
 	const getStageMaxScore = (stage: 1 | 2 | 3): number => {
-		// Build a map of answers for quick lookup
-		const stageKey = `stage${stage}` as keyof Pick<AssessmentData, 'stage1' | 'stage2' | 'stage3'>;
-		const answers = assessmentData[stageKey];
-		const answerMap = new Map<string, Answer>(answers.map(a => [a.questionId, a]));
-
 		// Select question list by stage
 		let questions = [] as typeof stage1Questions;
 		if (stage === 1) questions = stage1Questions;
@@ -92,28 +88,11 @@ export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({ children
 			// Add maximum score for main question (which is 2)
 			maxScore += 2;
 
-			// Add maximum score for relevant sub-questions based on user's answer value
-			const ans = answerMap.get(q.id);
-			if (ans && q.subQuestions && q.subQuestions.length > 0) {
-				const relevantSubs = q.subQuestions.filter((sq) =>
-					(sq.triggerValue && sq.triggerValue === ans.value) ||
-					(!sq.triggerValue && q.triggerSubQuestions && ans.value === q.triggerSubQuestions)
-				);
+			// Add maximum score for ALL possible sub-questions (not just triggered ones)
+			if (q.subQuestions && q.subQuestions.length > 0) {
 				// Each sub-question also has maximum score of 2
-				maxScore += relevantSubs.length * 2;
+				maxScore += q.subQuestions.length * 2;
 			}
-		}
-
-		// Fallback: if no answers yet, use a basic calculation
-		if (answers.length === 0) {
-			let totalQuestionsCount = questions.length;
-			// Add potential sub-questions (estimate)
-			for (const q of questions) {
-				if (q.subQuestions) {
-					totalQuestionsCount += q.subQuestions.length;
-				}
-			}
-			return totalQuestionsCount * 2;
 		}
 
 		return maxScore;

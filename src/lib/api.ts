@@ -62,23 +62,34 @@ export const api = {
   async saveAssessmentResult(result: AssessmentResult) {
     console.log('🔄 Saving assessment result:', result);
     
+    // Map stage number to enum value expected by database
+    const stageMapping = {
+      1: 'stage1',
+      2: 'stage2', 
+      3: 'stage3'
+    } as const;
+    
+    const stageValue = stageMapping[result.stage as keyof typeof stageMapping];
+    
     // Simpan hasil ke tabel 'assessments' sesuai dengan schema database
     const { data, error } = await supabase
       .from('assessments')
-      .insert([
+      .upsert([
         {
           user_id: result.userId,
-          stage: `stage${result.stage}`,
+          stage: stageValue,
           answers_json: result.answers,
           total_score: result.totalScore,
           max_score: result.maxScore,
           completed_at: new Date().toISOString(),
         },
-      ]);
+      ], {
+        onConflict: 'user_id,stage' // Handle duplicates by updating existing record
+      });
 
     if (error) {
       console.error('❌ Error saving assessment:', error);
-      throw new Error(error.message);
+      throw new Error(`Database error: ${error.message}`);
     }
     
     console.log('✅ Assessment result saved successfully:', data);

@@ -45,28 +45,33 @@ import html2canvas from "html2canvas";
 import { useToast } from "@/hooks/use-toast";
 
 export default function FinalResult() {
-  const { assessmentData, getTotalScore, resetAssessment } = useAssessment();
+  const { assessmentData, getTotalScore, resetAssessment, getStageMaxScore } = useAssessment();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const stage1Score = assessmentData.stage1.reduce(
-    (sum, answer) => sum + answer.score,
+    (sum, answer) => sum + answer.score + (answer.subAnswers?.reduce((subSum, sub) => subSum + sub.score, 0) || 0),
     0
   );
   const stage2Score = assessmentData.stage2.reduce(
-    (sum, answer) => sum + answer.score,
+    (sum, answer) => sum + answer.score + (answer.subAnswers?.reduce((subSum, sub) => subSum + sub.score, 0) || 0),
     0
   );
   const stage3Score = assessmentData.stage3.reduce(
-    (sum, answer) => sum + answer.score,
+    (sum, answer) => sum + answer.score + (answer.subAnswers?.reduce((subSum, sub) => subSum + sub.score, 0) || 0),
     0
   );
   const totalScore = getTotalScore();
 
-  const maxScores = { stage1: 50, stage2: 30, stage3: 25 };
+  // Use dynamic max scores instead of hard-coded values
+  const maxScores = { 
+    stage1: getStageMaxScore(1), 
+    stage2: getStageMaxScore(2), 
+    stage3: getStageMaxScore(3) 
+  };
   const totalMaxScore = maxScores.stage1 + maxScores.stage2 + maxScores.stage3;
-  const totalPercentage = Math.round((totalScore / totalMaxScore) * 100);
+  const totalPercentage = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0;
   const minimumPassScore = 60;
   const isPassed = totalPercentage >= minimumPassScore;
   const percentile = Math.min(
