@@ -68,57 +68,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             role: userData.role,
           });
           setRegistrationData(null);
-        } else if (registrationData) {
-          // User profile doesn't exist and we have registration data, create profile
-          console.log('📝 Creating user profile with data:', {
-            id: authUser.id,
-            full_name: registrationData.fullName,
-            email: registrationData.email,
-            phone: registrationData.phone,
-            address: registrationData.address,
-            role: registrationData.role,
-          });
+        } else {
+          // Profile doesn't exist yet, might be a new registration
+          // The database trigger should create the profile automatically
+          console.log('⏳ Profile not found yet, waiting for database trigger...');
           
-          // Insert into profiles table
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .insert({
-              id: authUser.id,
-              full_name: registrationData.fullName,
-              email: registrationData.email,
-              phone: registrationData.phone,
-              address: registrationData.address,
-              role: registrationData.role,
-            });
-            
-          if (insertError) {
-            console.error("❌ Error inserting new user:", insertError);
-          } else {
-            console.log('✅ User profile created successfully');
-            // Fetch the newly created user data to confirm
-            const { data: newUserData, error: fetchError } = await supabase
+          // Wait a bit for the database trigger to complete
+          setTimeout(async () => {
+            const { data: retryUserData } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', authUser.id)
               .single();
               
-            if (fetchError) {
-              console.error("❌ Error fetching new user data:", fetchError);
-            } else {
-              console.log('✅ New user data retrieved:', newUserData);
+            if (retryUserData) {
+              console.log('✅ Profile found after retry:', retryUserData);
               setUser({
-                id: newUserData.id,
-                fullName: newUserData.full_name,
+                id: retryUserData.id,
+                fullName: retryUserData.full_name,
                 email: authUser.email as string,
-                phone: newUserData.phone,
-                address: newUserData.address,
-                role: newUserData.role,
+                phone: retryUserData.phone,
+                address: retryUserData.address,
+                role: retryUserData.role,
               });
+              setRegistrationData(null);
+            } else {
+              console.log('⚠️ Profile still not found after retry');
             }
-          }
-          setRegistrationData(null);
-        } else {
-          console.log('⚠️ User authenticated but no profile found and no registration data');
+          }, 2000);
         }
       } else {
         console.log('🚺 User signed out');
@@ -152,10 +129,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         role: userData.role
       });
       
+      // Validate required fields before proceeding
+      if (!userData.fullName?.trim()) {
+        throw new Error('Nama lengkap harus diisi');
+      }
+      if (!userData.phone?.trim()) {
+        throw new Error('Nomor telepon harus diisi');
+      }
+      if (!userData.address?.trim()) {
+        throw new Error('Alamat harus diisi');
+      }
+      
       // Store registration data before signup
       setRegistrationData(userData);
       
       // Sign up user with Supabase Auth
+      // The database trigger will automatically create the profile
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
@@ -176,6 +165,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       console.log('✅ Auth signup successful:', data.user?.id);
+      
+      // Wait a moment for the database trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       return true;
     } catch (e) {
       console.error('❌ Registration failed:', e);
