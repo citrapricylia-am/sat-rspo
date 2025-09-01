@@ -30,9 +30,52 @@ export const api = {
    * Fungsi untuk login pengguna.
    */
   async login({ email, password }: Pick<ApiUser, 'email' | 'password'>) {
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-    if (authError) throw new Error(authError.message);
-    return authData.user;
+    console.log('🔑 Attempting login for:', email);
+    
+    try {
+      // Clean email input
+      const cleanEmail = email.trim().toLowerCase();
+      
+      // Attempt login
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ 
+        email: cleanEmail, 
+        password 
+      });
+      
+      if (authError) {
+        console.error('❌ Login failed:', {
+          message: authError.message,
+          status: authError.status,
+          name: authError.name
+        });
+        
+        // Provide more specific error messages
+        if (authError.message.includes('Invalid login credentials')) {
+          throw new Error('Email atau password salah. Silakan periksa kembali.');
+        } else if (authError.message.includes('Email not confirmed')) {
+          throw new Error('Email belum dikonfirmasi. Silakan cek email Anda.');
+        } else if (authError.message.includes('Too many requests')) {
+          throw new Error('Terlalu banyak percobaan login. Silakan coba lagi nanti.');
+        } else if (authError.message.includes('User not found')) {
+          throw new Error('Email tidak terdaftar. Silakan daftar terlebih dahulu.');
+        } else if (authError.status === 400) {
+          throw new Error('Permintaan login tidak valid. Silakan periksa email dan password.');
+        } else {
+          throw new Error(`Login gagal: ${authError.message}`);
+        }
+      }
+      
+      if (!authData.user) {
+        throw new Error('Login berhasil tetapi data user tidak ditemukan');
+      }
+      
+      console.log('✅ Login successful for user:', authData.user.id);
+      return authData.user;
+    } catch (error) {
+      // Re-throw the error to be handled by the calling code
+      console.error('💬 Login process error:', error);
+      throw error;
+    }
   },
   
   /**

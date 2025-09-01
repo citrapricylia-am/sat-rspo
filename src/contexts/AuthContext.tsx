@@ -62,8 +62,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           
           // If it's not a "not found" error, this is a serious issue
           if (error.code !== 'PGRST116') {
-            console.error('😨 This might be an RLS policy issue');
-            return;
+            console.error('😨 This might be an RLS policy issue or server error');
+            // Don't return here - still try to create emergency profile
           }
         }
 
@@ -79,34 +79,79 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             role: userData.role,
           });
           setRegistrationData(null);
-        } else {
-          // Profile doesn't exist yet, might be a new registration
-          // The database trigger should create the profile automatically
-          console.log('⏳ Profile not found yet, waiting for database trigger...');
+        } else if (!userData || error?.code === 'PGRST116') {
+          // Profile doesn't exist - this happens when auth user exists but profile is missing
+          console.log('⚠️ Profile not found for authenticated user, creating emergency profile...');
+          console.log('📋 User metadata:', authUser.user_metadata);
           
-          // Wait a bit for the database trigger to complete
-          setTimeout(async () => {
-            const { data: retryUserData } = await supabase
+          try {
+            // First, try to create the profile
+            const profileData = {
+              id: authUser.id,
+              full_name: authUser.user_metadata?.full_name || 
+                        authUser.user_metadata?.fullName || 
+                        authUser.email?.split('@')[0] || 'User',
+              email: authUser.email || '',
+              phone: authUser.user_metadata?.phone || '',
+              address: authUser.user_metadata?.address || '',
+              role: (authUser.user_metadata?.role as 'petani' | 'manajer') || 'petani'
+            };
+            
+            console.log('📝 Creating profile with data:', profileData);
+            
+            const { data: createdProfile, error: createError } = await supabase
               .from('profiles')
-              .select('*')
-              .eq('id', authUser.id)
+              .insert(profileData)
+              .select()
               .single();
               
-            if (retryUserData) {
-              console.log('✅ Profile found after retry:', retryUserData);
-              setUser({
-                id: retryUserData.id,
-                fullName: retryUserData.full_name,
-                email: authUser.email as string,
-                phone: retryUserData.phone,
-                address: retryUserData.address,
-                role: retryUserData.role,
-              });
-              setRegistrationData(null);
-            } else {
-              console.log('⚠️ Profile still not found after retry');
+            if (createError) {
+              console.error('❌ Failed to create emergency profile:', createError);
+              
+              // If it's a duplicate key error, try to fetch existing profile
+              if (createError.code === '23505') {
+                console.log('🔍 Profile might exist, trying to fetch again...');
+                const { data: existingProfile } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', authUser.id)
+                  .single();
+                  
+                if (existingProfile) {
+                  console.log('✅ Found existing profile after retry');
+                  setUser({
+                    id: existingProfile.id,
+                    fullName: existingProfile.full_name,
+                    email: authUser.email as string,
+                    phone: existingProfile.phone,
+                    address: existingProfile.address,
+                    role: existingProfile.role,
+                  });
+                  return;
+                }
+              }
+              
+              // If we still can't create/find profile, sign out
+              console.error('💥 Cannot create or find profile, signing out user');
+              await supabase.auth.signOut();
+              return;
             }
-          }, 2000);
+            
+            console.log('✅ Emergency profile created successfully:', createdProfile);
+            
+            // Set the user with the newly created profile
+            setUser({
+              id: createdProfile.id,
+              fullName: createdProfile.full_name,
+              email: authUser.email as string,
+              phone: createdProfile.phone,
+              address: createdProfile.address,
+              role: createdProfile.role,
+            });
+          } catch (emergencyError) {
+            console.error('❌ Emergency profile creation failed completely:', emergencyError);
+            await supabase.auth.signOut();
+          }
         }
       } else {
         console.log('🚺 User signed out');
@@ -122,10 +167,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log('🔑 Attempting login for:', email);
       await api.login({ email, password });
+      console.log('✅ Login successful, waiting for auth state change...');
       return true;
     } catch (e) {
-      console.error(e);
+      console.error('❌ Login failed:', e);
       return false;
     }
   };
@@ -172,7 +219,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (error) {
         console.error('❌ Registration error:', error.message);
         setRegistrationData(null);
-        throw new Error(error.message);
+        
+        // Provide more specific error messages
+        if (error.message.includes('User already registered') || error.message.includes('already been registered')) {
+          throw new Error('Email sudah terdaftar. Silakan gunakan email lain atau login dengan email ini.');
+        } else if (error.message.includes('Invalid email')) {
+          throw new Error('Format email tidak valid. Silakan periksa kembali.');
+        } else if (error.message.includes('Password')) {
+          throw new Error('Password harus minimal 6 karakter.');
+        } else {
+          throw new Error(`Registrasi gagal: ${error.message}`);
+        }
       }
       
       console.log('✅ Auth signup successful:', data.user?.id);
