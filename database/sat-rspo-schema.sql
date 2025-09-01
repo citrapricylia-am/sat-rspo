@@ -223,7 +223,34 @@ CREATE POLICY "managers_view_all_login_history" ON login_history
     );
 
 -- =====================================================
--- 6. HELPER FUNCTIONS
+-- 6. USER METADATA TRIGGER FUNCTION
+-- =====================================================
+
+-- Function to automatically create user profile from auth metadata
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+    INSERT INTO public.profiles (id, full_name, email, phone, address, role)
+    VALUES (
+        NEW.id,
+        COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+        NEW.email,
+        NEW.raw_user_meta_data->>'phone',
+        NEW.raw_user_meta_data->>'address',
+        COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'petani')
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger for automatic profile creation
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- =====================================================
+-- 7. HELPER FUNCTIONS
 -- =====================================================
 
 -- Function to get user assessment statistics

@@ -5,30 +5,42 @@ export default async function handler(req, res) {
 
   const { full_name, email, password, phone, address, role } = req.body;
 
-  // 1. Sign up user di Supabase Auth
+  // Validate required fields
+  if (!full_name || !email || !password || !role) {
+    return res.status(400).json({ 
+      error: 'Missing required fields: full_name, email, password, role' 
+    });
+  }
+
+  // 1. Sign up user in Supabase Auth with metadata
   const { data: { user }, error: signUpError } = await supabase.auth.signUp({
     email,
-    password
+    password,
+    options: {
+      data: {
+        full_name,
+        phone,
+        address,
+        role
+      }
+    }
   });
 
   if (signUpError) return res.status(400).json({ error: signUpError.message });
   if (!user) return res.status(400).json({ error: 'Failed to create user' });
 
-  // 2. Insert ke profiles
-  const { data, error: profileError } = await supabase
-    .from('profiles')
-    .insert({
-      user_id: user.id,
+  // Note: Profile creation is now handled automatically by database trigger
+  // The trigger will use the metadata passed above to create the profile
+
+  res.status(201).json({ 
+    success: true, 
+    user: {
+      id: user.id,
+      email: user.email,
       full_name,
-      email,
       phone,
       address,
       role
-    })
-    .select()
-    .single();
-
-  if (profileError) return res.status(400).json({ error: profileError.message });
-
-  res.status(201).json({ success: true, user: data });
+    }
+  });
 }
