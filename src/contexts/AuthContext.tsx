@@ -1,3 +1,4 @@
+// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { api, supabase } from '@/lib/api';
 
@@ -12,20 +13,17 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (userData: Omit<User, 'id'> & { password: string }) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<User>;
+  register: (userData: Omit<User, 'id'> & { password: string }) => Promise<User>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
-  saveAssessmentResult: (result: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
@@ -35,408 +33,45 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [registrationData, setRegistrationData] = useState<Omit<User, 'id'> & { password: string } | null>(null);
 
+  // Pantau perubahan auth
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔄 Auth state changed:', event, session?.user?.id);
-      
-      if (session) {
-        const { user: authUser } = session;
-
-        // Prevent multiple simultaneous profile fetches for the same user
-        if (user?.id === authUser.id) {
-          console.log('📦 User already set, skipping profile fetch');
-          return;
-        }
-
-        // Check if user profile exists in the profiles table
-        console.log('🔍 Fetching profile for user:', authUser.id);
-        let { data: userData, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', authUser.id)
-          .single();
-
-        if (error) {
-          console.error("❌ Error fetching user data:", {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          });
-          
-          // If it's not a "not found" error, this is a serious issue
-          if (error.code !== 'PGRST116') {
-            console.error('😨 This might be an RLS policy issue or server error');
-            // Don't return here - still try to create emergency profile
-          }
-        }
-
-        if (userData) {
-          // User profile exists, set user state
-          console.log('✅ User profile found:', userData);
-          setUser({
-            id: userData.id,
-            fullName: userData.full_name,
-            email: authUser.email as string,
-            phone: userData.phone,
-            address: userData.address,
-            role: userData.role,
-          });
-          setRegistrationData(null);
-        } else if (!userData || error?.code === 'PGRST116') {
-          // EMERGENCY: Profile doesn't exist - create it immediately with timeout
-          console.log('🚨 EMERGENCY: Profile missing for authenticated user!');
-          console.log('📋 User metadata available:', authUser.user_metadata);
-          
-          // Create emergency profile with timeout protection
-          const emergencyProfilePromise = new Promise(async (resolve, reject) => {
-            const emergencyTimeoutId = setTimeout(() => {
-              reject(new Error('Emergency profile creation timeout'));
-            }, 5000); // 5 second timeout for emergency profile creation
-            
-            try {
-              // Enhanced profile data with comprehensive fallbacks
-              const emergencyProfileData = {
-                id: authUser.id,
-                full_name: authUser.user_metadata?.full_name || 
-                          authUser.user_metadata?.fullName || 
-                          authUser.email?.split('@')[0] || 
-                          'User ' + authUser.id.substring(0, 8),
-                email: authUser.email || '',
-                phone: authUser.user_metadata?.phone || '',
-                address: authUser.user_metadata?.address || '',
-                role: (authUser.user_metadata?.role as 'petani' | 'manajer') || 'petani'
-              };
-              
-              console.log('🔄 Creating emergency profile with data:', emergencyProfileData);
-              
-              // ROBUST EMERGENCY PROFILE CREATION - try upsert first
-              const { data: upsertProfile, error: upsertError } = await supabase
-                .from('profiles')
-                .upsert(emergencyProfileData, {
-                  onConflict: 'id',
-                  ignoreDuplicates: false
-                })
-                .select()
-                .single();
-                
-              clearTimeout(emergencyTimeoutId);
-              
-              if (upsertProfile && !upsertError) {
-                console.log('✅ EMERGENCY SUCCESS: Profile created via upsert');
-                resolve(upsertProfile);
-              } else {
-                console.log('⚠️ Emergency upsert failed:', upsertError);
-                reject(upsertError || new Error('Emergency profile creation failed'));
-              }
-            } catch (emergencyError) {
-              clearTimeout(emergencyTimeoutId);
-              reject(emergencyError);
-            }
-          });
-          
-          try {
-            const emergencyProfile = await emergencyProfilePromise as any;
-            
-            // Successfully created emergency profile
-            setUser({
-              id: emergencyProfile.id,
-              fullName: emergencyProfile.full_name,
-              email: authUser.email as string,
-              phone: emergencyProfile.phone,
-              address: emergencyProfile.address,
-              role: emergencyProfile.role,
-            });
-            
-            setRegistrationData(null);
-            console.log('🎉 EMERGENCY PROFILE RECOVERY SUCCESSFUL!');
-          } catch (emergencyError) {
-            console.error('🚨 CRITICAL: Emergency profile creation failed:', emergencyError);
-            console.error('Signing out user to prevent auth limbo state');
-            
-            setRegistrationData(null);
-            await supabase.auth.signOut();
-            return;
-          }
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        try {
+          const profile = await api.getUserProfile(session.user.id);
+          setUser(profile);
+        } catch (error) {
+          console.error('❌ Gagal fetch profile:', error);
+          setUser(null);
         }
       } else {
-        console.log('🚺 User signed out');
         setUser(null);
-        setRegistrationData(null);
       }
     });
 
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []); // Remove registrationData dependency to prevent loops
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      console.log('🔑 LOGIN ATTEMPT STARTED for:', email);
-      console.log('📋 Current user state:', user ? 'LOGGED IN' : 'NOT LOGGED IN');
-      
-      // Clean email input
-      const cleanEmail = email.trim().toLowerCase();
-      console.log('🧹 Cleaned email:', cleanEmail);
-      
-      // Create a promise with timeout for the entire login process
-      const loginWithTimeout = new Promise<boolean>(async (resolve, reject) => {
-        const timeoutId = setTimeout(() => {
-          reject(new Error('Login timeout - proses memakan waktu terlalu lama. Silakan coba lagi.'));
-        }, 10000); // 10 second timeout
-        
-        try {
-          // Call the API login function
-          console.log('🚀 Calling Supabase auth.signInWithPassword...');
-          const result = await api.login({ email: cleanEmail, password });
-          console.log('✅ Supabase login successful, user data:', {
-            id: result.id,
-            email: result.email
-          });
-          
-          console.log('⏳ Waiting for auth state change to complete...');
-          
-          // Wait for auth state change to complete with shorter timeout
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          clearTimeout(timeoutId);
-          console.log('🎉 LOGIN PROCESS COMPLETED SUCCESSFULLY!');
-          resolve(true);
-        } catch (error) {
-          clearTimeout(timeoutId);
-          reject(error);
-        }
-      });
-      
-      return await loginWithTimeout;
-    } catch (e) {
-      console.error('❌ LOGIN FAILED with error:', e);
-      console.error('📊 Error details:', {
-        name: e.name,
-        message: e.message,
-        stack: e.stack
-      });
-      throw e; // Re-throw to show error message to user
-    }
+  const login = async (email: string, password: string) => {
+    const loggedUser = await api.login({ email, password });
+    setUser(loggedUser);
+    return loggedUser;
   };
 
-  const register = async (userData: Omit<User, 'id'> & { password: string }): Promise<boolean> => {
-    try {
-      console.log('🔄 Starting registration process with data:', {
-        fullName: userData.fullName,
-        email: userData.email,
-        phone: userData.phone,
-        address: userData.address,
-        role: userData.role
-      });
-      
-      // Validate required fields before proceeding
-      if (!userData.fullName?.trim()) {
-        throw new Error('Nama lengkap harus diisi');
-      }
-      if (!userData.phone?.trim()) {
-        throw new Error('Nomor telepon harus diisi');
-      }
-      if (!userData.address?.trim()) {
-        throw new Error('Alamat harus diisi');
-      }
-      
-      // Clean the email
-      const cleanEmail = userData.email.trim().toLowerCase();
-      
-      // Store registration data before signup
-      setRegistrationData(userData);
-      
-      // Add a small delay to ensure database is ready
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Sign up user with Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
-        email: cleanEmail,
-        password: userData.password,
-        options: {
-          data: {
-            full_name: userData.fullName,
-            fullName: userData.fullName, // Include both for compatibility
-            phone: userData.phone,
-            address: userData.address,
-            role: userData.role
-          }
-        }
-      });
-
-      if (error) {
-        console.error('❌ Registration error:', error.message);
-        setRegistrationData(null);
-        
-        // Provide more specific error messages
-        if (error.message.includes('User already registered') || error.message.includes('already been registered')) {
-          // For duplicate emails, suggest login instead
-          throw new Error('Email sudah terdaftar. Silakan gunakan halaman login untuk masuk dengan email ini.');
-        } else if (error.message.includes('Invalid email')) {
-          throw new Error('Format email tidak valid. Silakan periksa kembali.');
-        } else if (error.message.includes('Password')) {
-          throw new Error('Password harus minimal 6 karakter.');
-        } else if (error.message.includes('Signup is disabled')) {
-          throw new Error('Pendaftaran sedang dinonaktifkan. Silakan coba lagi nanti.');
-        } else if (error.message.includes('Database error') || error.message.includes('500')) {
-          throw new Error('Terjadi masalah dengan database. Silakan coba lagi dalam beberapa saat.');
-        } else {
-          throw new Error(`Registrasi gagal: ${error.message}`);
-        }
-      }
-      
-      if (!data.user) {
-        setRegistrationData(null);
-        throw new Error('Registrasi gagal: User data tidak ditemukan');
-      }
-      
-      console.log('✅ Auth signup successful:', data.user.id);
-      console.log('📋 Auth user metadata:', data.user.user_metadata);
-      
-      // IMPORTANT: Create user profile manually (trigger is disabled for reliability)
-      console.log('🔄 Creating user profile automatically...');
-      
-      const profileData = {
-        id: data.user.id,
-        full_name: userData.fullName,
-        email: cleanEmail,
-        phone: userData.phone || '',
-        address: userData.address || '',
-        role: userData.role
-      };
-      
-      console.log('📝 Profile data to insert:', profileData);
-      
-      // GUARANTEED PROFILE CREATION - Multiple strategies to ensure success
-      let profileResult = null;
-      let lastError = null;
-      
-      // Strategy 1: Direct INSERT (most common scenario)
-      console.log('🔄 Strategy 1: Direct profile insertion...');
-      const insertResult = await supabase
-        .from('profiles')
-        .insert(profileData)
-        .select()
-        .single();
-        
-      if (insertResult.data && !insertResult.error) {
-        profileResult = insertResult.data;
-        console.log('✅ Strategy 1 SUCCESS: Profile inserted directly');
-      } else {
-        lastError = insertResult.error;
-        console.log('⚠️ Strategy 1 failed, trying Strategy 2...');
-        
-        // Strategy 2: UPSERT (handles conflicts)
-        console.log('🔄 Strategy 2: Profile upsert...');
-        const upsertResult = await supabase
-          .from('profiles')
-          .upsert(profileData, {
-            onConflict: 'id',
-            ignoreDuplicates: false
-          })
-          .select()
-          .single();
-          
-        if (upsertResult.data && !upsertResult.error) {
-          profileResult = upsertResult.data;
-          console.log('✅ Strategy 2 SUCCESS: Profile upserted');
-        } else {
-          lastError = upsertResult.error;
-          console.log('⚠️ Strategy 2 failed, trying Strategy 3...');
-          
-          // Strategy 3: Check if profile was created by another process
-          console.log('🔄 Strategy 3: Checking for existing profile...');
-          const { data: existingProfile, error: fetchError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
-            
-          if (existingProfile && !fetchError) {
-            profileResult = existingProfile;
-            console.log('✅ Strategy 3 SUCCESS: Found existing profile');
-          } else {
-            // All strategies failed - this should be extremely rare
-            console.error('🚨 ALL STRATEGIES FAILED - Critical error');
-            console.error('Last error:', lastError);
-            console.error('Fetch error:', fetchError);
-            
-            // Clean up the auth user since we can't create a profile
-            setRegistrationData(null);
-            
-            try {
-              await supabase.auth.signOut();
-              console.log('🧹 Auth user cleaned up due to profile creation failure');
-            } catch (signOutError) {
-              console.error('❌ Failed to sign out user:', signOutError);
-            }
-            
-            throw new Error(`Gagal membuat profil pengguna. Database mungkin bermasalah. Error: ${lastError?.message || 'Unknown error'}`);
-          }
-        }
-      }
-      
-      // SUCCESS - Profile created automatically!
-      console.log('✅ AUTOMATIC PROFILE CREATION SUCCESSFUL!');
-      console.log('📋 Final profile data:', {
-        id: profileResult.id,
-        fullName: profileResult.full_name,
-        email: profileResult.email,
-        phone: profileResult.phone,
-        address: profileResult.address,
-        role: profileResult.role
-      });
-      
-      // Clear registration state
-      setRegistrationData(null);
-      
-      // Brief pause to let database operations complete
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      console.log('🎉 Registration completed successfully! User should be redirected.');
-      return true;
-    } catch (e) {
-      console.error('❌ Registration failed:', e);
-      setRegistrationData(null);
-      throw e; // Re-throw to show error message to user
-    }
+  const register = async (userData: Omit<User, 'id'> & { password: string }) => {
+    const registeredUser = await api.register(userData);
+    setUser(registeredUser);
+    return registeredUser;
   };
 
   const logout = async () => {
     await supabase.auth.signOut();
-  };
-
-  const saveAssessmentResult = async (result: any) => {
-    try {
-      if (!user) {
-        console.error('❌ Cannot save assessment: User not authenticated');
-        throw new Error("Pengguna tidak terotentikasi. Silakan login terlebih dahulu.");
-      }
-      
-      console.log('🔄 Saving assessment result for user:', user.id, result);
-      await api.saveAssessmentResult({ ...result, userId: user.id });
-      console.log('✅ Assessment result saved successfully');
-    } catch (e) {
-      console.error("❌ Failed to save assessment result:", e);
-      throw e; // Re-throw so the caller can handle it
-    }
-  };
-
-  const value = {
-    user,
-    login,
-    register,
-    logout,
-    isAuthenticated: !!user,
-    saveAssessmentResult,
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
