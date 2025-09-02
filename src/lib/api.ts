@@ -46,8 +46,7 @@ export const api = {
         console.error('❌ Login failed:', {
           message: authError.message,
           status: authError.status,
-          name: authError.name,
-          cause: authError.cause
+          name: authError.name
         });
               
         console.log('🔍 Login error details for debugging:', authError);
@@ -147,5 +146,80 @@ export const api = {
    */
   async saveAssessment(result: AssessmentResult) {
     return this.saveAssessmentResult(result);
+  },
+
+  /**
+   * Fungsi untuk mengambil hasil assessment berdasarkan user ID dan stage.
+   */
+  async getAssessmentResult(userId: string, stage: 1 | 2 | 3) {
+    console.log('🔍 Fetching assessment result for:', { userId, stage });
+    
+    // Map stage number to enum value expected by database
+    const stageMapping = {
+      1: 'stage1',
+      2: 'stage2', 
+      3: 'stage3'
+    } as const;
+    
+    const stageValue = stageMapping[stage];
+    
+    const { data, error } = await supabase
+      .from('assessments')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('stage', stageValue)
+      .single();
+
+    if (error) {
+      // If no record found, return null instead of throwing error
+      if (error.code === 'PGRST116') {
+        console.log('ℹ️ No assessment result found for stage:', stage);
+        return null;
+      }
+      console.error('❌ Error fetching assessment:', error);
+      throw new Error(`Database error: ${error.message}`);
+    }
+    
+    console.log('✅ Assessment result fetched successfully:', data);
+    return data;
+  },
+
+  /**
+   * Fungsi untuk mengambil semua hasil assessment user.
+   */
+  async getAllAssessmentResults(userId: string) {
+    console.log('🔍 Fetching all assessment results for user:', userId);
+    
+    const { data, error } = await supabase
+      .from('assessments')
+      .select('*')
+      .eq('user_id', userId)
+      .order('stage');
+
+    if (error) {
+      console.error('❌ Error fetching assessments:', error);
+      throw new Error(`Database error: ${error.message}`);
+    }
+    
+    console.log('✅ All assessment results fetched successfully:', data);
+    return data;
+  },
+
+  /**
+   * Fungsi untuk mengambil statistik assessment user menggunakan database function.
+   */
+  async getUserAssessmentStats(userId: string) {
+    console.log('🔍 Fetching assessment statistics for user:', userId);
+    
+    const { data, error } = await supabase
+      .rpc('get_user_assessment_stats', { target_user_id: userId });
+
+    if (error) {
+      console.error('❌ Error fetching assessment stats:', error);
+      throw new Error(`Database error: ${error.message}`);
+    }
+    
+    console.log('✅ Assessment statistics fetched successfully:', data);
+    return data?.[0] || null;
   }
 };
