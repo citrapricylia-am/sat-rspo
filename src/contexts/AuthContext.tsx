@@ -86,104 +86,79 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           });
           setRegistrationData(null);
         } else if (!userData || error?.code === 'PGRST116') {
-          // EMERGENCY: Profile doesn't exist - create it immediately
+          // EMERGENCY: Profile doesn't exist - create it immediately with timeout
           console.log('🚨 EMERGENCY: Profile missing for authenticated user!');
           console.log('📋 User metadata available:', authUser.user_metadata);
           
-          try {
-            // Enhanced profile data with comprehensive fallbacks
-            const emergencyProfileData = {
-              id: authUser.id,
-              full_name: authUser.user_metadata?.full_name || 
-                        authUser.user_metadata?.fullName || 
-                        authUser.email?.split('@')[0] || 
-                        'User ' + authUser.id.substring(0, 8),
-              email: authUser.email || '',
-              phone: authUser.user_metadata?.phone || '',
-              address: authUser.user_metadata?.address || '',
-              role: (authUser.user_metadata?.role as 'petani' | 'manajer') || 'petani'
-            };
+          // Create emergency profile with timeout protection
+          const emergencyProfilePromise = new Promise(async (resolve, reject) => {
+            const emergencyTimeoutId = setTimeout(() => {
+              reject(new Error('Emergency profile creation timeout'));
+            }, 5000); // 5 second timeout for emergency profile creation
             
-            console.log('🔄 Creating emergency profile with data:', emergencyProfileData);
-            
-            // ROBUST EMERGENCY PROFILE CREATION
-            let emergencyProfile = null;
-            
-            // Emergency Strategy 1: UPSERT (most reliable)
-            const { data: upsertProfile, error: upsertError } = await supabase
-              .from('profiles')
-              .upsert(emergencyProfileData, {
-                onConflict: 'id',
-                ignoreDuplicates: false
-              })
-              .select()
-              .single();
+            try {
+              // Enhanced profile data with comprehensive fallbacks
+              const emergencyProfileData = {
+                id: authUser.id,
+                full_name: authUser.user_metadata?.full_name || 
+                          authUser.user_metadata?.fullName || 
+                          authUser.email?.split('@')[0] || 
+                          'User ' + authUser.id.substring(0, 8),
+                email: authUser.email || '',
+                phone: authUser.user_metadata?.phone || '',
+                address: authUser.user_metadata?.address || '',
+                role: (authUser.user_metadata?.role as 'petani' | 'manajer') || 'petani'
+              };
               
-            if (upsertProfile && !upsertError) {
-              emergencyProfile = upsertProfile;
-              console.log('✅ EMERGENCY SUCCESS: Profile created via upsert');
-            } else {
-              console.log('⚠️ Emergency upsert failed, trying insert...');
+              console.log('🔄 Creating emergency profile with data:', emergencyProfileData);
               
-              // Emergency Strategy 2: INSERT
-              const { data: insertProfile, error: insertError } = await supabase
+              // ROBUST EMERGENCY PROFILE CREATION - try upsert first
+              const { data: upsertProfile, error: upsertError } = await supabase
                 .from('profiles')
-                .insert(emergencyProfileData)
+                .upsert(emergencyProfileData, {
+                  onConflict: 'id',
+                  ignoreDuplicates: false
+                })
                 .select()
                 .single();
                 
-              if (insertProfile && !insertError) {
-                emergencyProfile = insertProfile;
-                console.log('✅ EMERGENCY SUCCESS: Profile created via insert');
+              clearTimeout(emergencyTimeoutId);
+              
+              if (upsertProfile && !upsertError) {
+                console.log('✅ EMERGENCY SUCCESS: Profile created via upsert');
+                resolve(upsertProfile);
               } else {
-                console.log('⚠️ Emergency insert failed, checking existing...');
-                
-                // Emergency Strategy 3: Check existing (race condition protection)
-                const { data: existingProfile } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', authUser.id)
-                  .single();
-                  
-                if (existingProfile) {
-                  emergencyProfile = existingProfile;
-                  console.log('✅ EMERGENCY SUCCESS: Found existing profile');
-                } else {
-                  console.error('🚨 EMERGENCY FAILED: Cannot create profile for authenticated user');
-                }
+                console.log('⚠️ Emergency upsert failed:', upsertError);
+                reject(upsertError || new Error('Emergency profile creation failed'));
               }
+            } catch (emergencyError) {
+              clearTimeout(emergencyTimeoutId);
+              reject(emergencyError);
             }
+          });
+          
+          try {
+            const emergencyProfile = await emergencyProfilePromise as any;
             
-            if (emergencyProfile) {
-              // Successfully created/found emergency profile
-              setUser({
-                id: emergencyProfile.id,
-                fullName: emergencyProfile.full_name,
-                email: authUser.email as string,
-                phone: emergencyProfile.phone,
-                address: emergencyProfile.address,
-                role: emergencyProfile.role,
-              });
-              
-              setRegistrationData(null);
-              console.log('🎉 EMERGENCY PROFILE RECOVERY SUCCESSFUL!');
-            } else {
-              // Emergency failed completely - sign out user
-              console.error('🚨 CRITICAL: Emergency profile creation failed completely');
-              console.error('Signing out user to prevent auth limbo state');
-              
-              setRegistrationData(null);
-              await supabase.auth.signOut();
-              return;
-            }
-          } catch (emergencyError) {
-            console.error('❌ Emergency profile creation failed completely:', emergencyError);
+            // Successfully created emergency profile
+            setUser({
+              id: emergencyProfile.id,
+              fullName: emergencyProfile.full_name,
+              email: authUser.email as string,
+              phone: emergencyProfile.phone,
+              address: emergencyProfile.address,
+              role: emergencyProfile.role,
+            });
             
-            // Clear registration data to prevent infinite loops
             setRegistrationData(null);
+            console.log('🎉 EMERGENCY PROFILE RECOVERY SUCCESSFUL!');
+          } catch (emergencyError) {
+            console.error('🚨 CRITICAL: Emergency profile creation failed:', emergencyError);
+            console.error('Signing out user to prevent auth limbo state');
             
-            // Sign out the user
+            setRegistrationData(null);
             await supabase.auth.signOut();
+            return;
           }
         }
       } else {
@@ -207,21 +182,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const cleanEmail = email.trim().toLowerCase();
       console.log('🧹 Cleaned email:', cleanEmail);
       
-      // Call the API login function
-      console.log('🚀 Calling Supabase auth.signInWithPassword...');
-      const result = await api.login({ email: cleanEmail, password });
-      console.log('✅ Supabase login successful, user data:', {
-        id: result.id,
-        email: result.email
+      // Create a promise with timeout for the entire login process
+      const loginWithTimeout = new Promise<boolean>(async (resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Login timeout - proses memakan waktu terlalu lama. Silakan coba lagi.'));
+        }, 10000); // 10 second timeout
+        
+        try {
+          // Call the API login function
+          console.log('🚀 Calling Supabase auth.signInWithPassword...');
+          const result = await api.login({ email: cleanEmail, password });
+          console.log('✅ Supabase login successful, user data:', {
+            id: result.id,
+            email: result.email
+          });
+          
+          console.log('⏳ Waiting for auth state change to complete...');
+          
+          // Wait for auth state change to complete with shorter timeout
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          clearTimeout(timeoutId);
+          console.log('🎉 LOGIN PROCESS COMPLETED SUCCESSFULLY!');
+          resolve(true);
+        } catch (error) {
+          clearTimeout(timeoutId);
+          reject(error);
+        }
       });
       
-      console.log('⏳ Waiting for auth state change to complete...');
-      
-      // Wait for auth state change to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log('🎉 LOGIN PROCESS COMPLETED SUCCESSFULLY!');
-      return true;
+      return await loginWithTimeout;
     } catch (e) {
       console.error('❌ LOGIN FAILED with error:', e);
       console.error('📊 Error details:', {
