@@ -455,19 +455,19 @@ export const stage1Questions: Question[] = [
     text: "19. Apakah Bapak/Ibu pernah menyadari adanya perlakuan tidak adil atau diskriminatif terhadap pekerja di kebun? ",
     options: [
       {
-        value: "ya",
+        value: "pernah_menyadari_perlakuan_tidak_adil_diskriminatif",
         label:
           "ya, Saya pernah menyadari adanya perlakuan tidak adil dan diskriminatif terhadap pekerja di kebun",
         score: 3,
       },
       {
-        value: "tidak",
+        value: "tidak_pernah_menyadari_perlakuan_tidak_adil_diskriminatif",
         label:
           "Tidak, Saya tidak pernah menyadari adanya perlakuan tidak adil dan diskriminatif terhadap pekerja di kebun",
         score: 2,
       },
       {
-        value: "proses",
+        value: "sedang_proses_memahami_pentingnya_perlakuan_adil",
         label: "Sedang proses memahami pentingnya perlakuan adil",
         score: 2,
       },
@@ -482,19 +482,19 @@ export const stage1Questions: Question[] = [
     text: "20. Apakah Bapak/Ibu memahami bahwa tindakan kekerasan, pelecehan, atau diskriminasi terhadap pekerja tidak diperbolehkan?",
     options: [
       {
-        value: "ya",
+        value: "memahami_kekerasan_pelecehan_diskriminasi_tidak_diperbolehkan",
         label:
           "Ya, Saya memahami bahwa tindakan kekerasan, pelecehan, atau diskriminasi terhadap pekerja tidak diperbolehkan",
         score: 2,
       },
       {
-        value: "tidak",
+        value: "tidak_memahami_kekerasan_pelecehan_diskriminasi_tidak_diperbolehkan",
         label:
           "Tidak, Saya tidak memahami bahwa tindakan kekerasan, pelecehan, atau diskriminasi terhadap pekerja tidak diperbolehkan",
         score: 0,
       },
       {
-        value: "proses",
+        value: "sedang_proses_memahami_pentingnya_perlakuan_adil_pekerja",
         label: "Sedang proses memahami pentingnya perlakuan adil",
         score: 1,
       },
@@ -509,19 +509,19 @@ export const stage1Questions: Question[] = [
     text: "21. Apakah Bapak/Ibu mengetahui adanya area konservasi atau hutan penting di sekitar lahan? ",
     options: [
       {
-        value: "ya",
+        value: "mengetahui_area_konservasi_hutan_penting_sekitar_lahan",
         label:
           "Ya, Saya mengetahui adanya area konservasi atau hutan penting di sekitar lahan",
         score: 2,
       },
       {
-        value: "tidak",
+        value: "tidak_mengetahui_area_konservasi_hutan_penting_sekitar_lahan",
         label:
           "Tidak, Saya tidak mengetahui adanya area konservasi atau hutan penting di sekitar lahan",
         score: 0,
       },
       {
-        value: "proses",
+        value: "sedang_proses_memahami_pentingnya_konservasi",
         label: "Sedang proses memahami pentingnya konservasi",
         score: 1,
       },
@@ -533,19 +533,19 @@ export const stage1Questions: Question[] = [
         triggerValue: "tidak",
         options: [
           {
-            value: "ya",
+            value: "mengetahui_pentingnya_menjaga_satwa_liar_ekosistem",
             label:
               "Ya, Mengetahuai Penting nya Menjaga Satwa Liar dan Ekosistem di Sekitar Kebun",
             score: 2,
           },
           {
-            value: "proses",
+            value: "sedang_proses_memahami_pentingnya_menjaga_satwa_liar_ekosistem",
             label:
               "Sedang Proses Memahami Pentingnya Menjaga Satwa Liar dan Ekosistem",
             score: 1,
           },
           {
-            value: "tidak",
+            value: "tidak_mengetahui_pentingnya_menjaga_satwa_liar_ekosistem",
             label:
               "Tidak Mengetahui Pentingnya Menjaga Satwa Liar dan Ekosistem",
             score: 0,
@@ -558,17 +558,17 @@ export const stage1Questions: Question[] = [
         triggerValue: "tidak",
         options: [
           {
-            value: "ya",
+            value: "bersedia_ikut_pelatihan_pelestarian_lingkungan_satwa_langka",
             label: "Ya, Berencana Melakukan Konservasi",
             score: 1,
           },
           {
-            value: "mungkin",
+            value: "mungkin_ikut_pelatihan_pelestarian_lingkungan_satwa_langka",
             label: "Mungkin Akan Melakukan Konservasi",
             score: 1,
           },
           {
-            value: "tidak",
+            value: "tidak_berencana_melakukan_konservasi",
             label: "Tidak Berencana Melakukan Konservasi",
             score: 0,
           },
@@ -580,10 +580,10 @@ export const stage1Questions: Question[] = [
     id: "q22",
     text: "22. Apakah Bapak/Ibu memiliki lahan sawit yang dibuka setelah tahun 2005?",
     options: [
-      { value: "ya", label: "Ya, Lahan Dibuka Setelah 2005", score: 2 },
-      { value: "tidak", label: "Tidak, Lahan Dibuka Sebelum 2005", score: 0 },
+      { value: "lahan_dibuka_setelah_2005", label: "Ya, Lahan Dibuka Setelah 2005", score: 2 },
+      { value: "lahan_dibuka_sebelum_2005", label: "Tidak, Lahan Dibuka Sebelum 2005", score: 0 },
       {
-        value: "proses",
+        value: "sedang_proses_memahami_aturan_pembukaan_lahan",
         label: "Sedang Proses Memahami Aturan Pembukaan Lahan",
         score: 1,
       },
@@ -592,22 +592,22 @@ export const stage1Questions: Question[] = [
       {
         id: "q22_sub1",
         text: "22a. Jika ya, apakah Bapak/Ibu bersedia untuk mengikuti proses identifikasi dan perbaikan lahan tersebut bersama kelompok?",
-        triggerValue: "ya",
+        triggerValue: "lahan_dibuka_setelah_2005",
         options: [
           {
-            value: "ya",
+            value: "bersedia_mengikuti_proses_identifikasi_perbaikan_lahan",
             label:
               "Ya, Bersedia Mengikuti Proses Identifikasi dan Perbaikan Lahan",
             score: 2,
           },
           {
-            value: "proses",
+            value: "sedang_proses_mengikuti_identifikasi_perbaikan_lahan",
             label:
               "Sedang Proses Mengikuti Proses Identifikasi dan Perbaikan Lahan",
             score: 1,
           },
           {
-            value: "tidak",
+            value: "tidak_bersedia_mengikuti_proses_identifikasi_perbaikan_lahan",
             label:
               "Tidak Bersedia Mengikuti Proses Identifikasi dan Perbaikan Lahan",
             score: 0,
@@ -621,17 +621,17 @@ export const stage1Questions: Question[] = [
     text: "23. Apakah Bapak/Ibu memiliki rencana untuk menanam kelapa sawit di lahan baru?  ",
     options: [
       {
-        value: "ya",
+        value: "berencana_menanam_kelapa_sawit_lahan_baru",
         label: "Ya, Berencana Menanam Kelapa Sawit di Lahan Baru",
         score: 2,
       },
       {
-        value: "tidak",
+        value: "tidak_berencana_menanam_kelapa_sawit_lahan_baru",
         label: "Tidak, Tidak Berencana Menanam Kelapa Sawit di Lahan Baru",
         score: 0,
       },
       {
-        value: "proses",
+        value: "sedang_proses_memahami_pentingnya_tidak_menanam_lahan_baru",
         label: "Sedang Proses Memahami Pentingnya Tidak Menanam di Lahan Baru",
         score: 1,
       },
@@ -640,7 +640,7 @@ export const stage1Questions: Question[] = [
       {
         id: "q23_sub1",
         text: "23a. Apakah Bapak/Ibu mengetahui bahwa menanam di hutan, gambut, atau lereng curam tidak diperbolehkan?",
-        triggerValue: "ya",
+        triggerValue: "berencana_menanam_kelapa_sawit_lahan_baru",
         options: [
           {
             value: "ya",
@@ -1279,17 +1279,17 @@ export const stage2Questions: Question[] = [
         triggerValue: "ya",
         options: [
           {
-            value: "ya",
+            value: "jumlah_panen_dan_jenis_benih",
             label: "Jumlah panen dan Jenis benih",
             score: 0,
           },
           {
-            value: "ya",
+            value: "biaya_pupuk",
             label: "biaya pupuk",
             score: 0,
           },
           {
-            value: "ya",
+            value: "transaksi_jual_beli",
             label: "transaksi jual beli",
             score: 0,
           },
@@ -1421,17 +1421,17 @@ export const stage2Questions: Question[] = [
         triggerValue: "belum",
         options: [
           {
-            value: "ya",
+            value: "sedang_mengurus_dokumen",
             label: "Ya, saya sedang mengurus dokumen tersebut",
             score: 2,
           },
           {
-            value: "tidak",
+            value: "tidak_mengurus_dokumen",
             label: "Tidak, saya tidak sedang mengurus dokumen tersebut",
             score: 0,
           },
           {
-            value: "ya",
+            value: "proses_pengurusan_dokumen",
             label: "Sedang dalam proses pengurusan",
             score: 1,
           },
@@ -3137,17 +3137,17 @@ export const stage2Questions: Question[] = [
     text: "79. Apakah Bapak/Ibu tahu bahwa ibu hamil, menyusui, dan anak muda tidak boleh terpapar pestisida di kebun?",
     options: [
       {
-        value: "ya",
+        value: "mengetahui_ibu_hamil_tidak_boleh_terpapar_pestisida",
         label: "Ya, saya sudah mengetahui nya",
         score: 2,
       },
       {
-        value: "tidak",
+        value: "belum_mengetahui_ibu_hamil_tidak_boleh_terpapar_pestisida",
         label: "Tidak, saya belum mengetahui nya",
         score: 0,
       },
       {
-        value: "proses",
+        value: "proses_memahami_ibu_hamil_tidak_boleh_terpapar_pestisida",
         label: "Sedang Proses memahami materi pelatihan",
         score: 1,
       },
@@ -3158,19 +3158,19 @@ export const stage2Questions: Question[] = [
     text: "80. Apakah kelompok pernah menyelenggarakan atau memfasilitasi pelatihan tentang penggunaan pestisida yang aman bagi anggotanya?",
     options: [
       {
-        value: "ya",
+        value: "kelompok_pernah_menyelenggarakan_pelatihan_pestisida_aman",
         label:
           "Ya, kelompok pernah menyelenggarakan atau memfasilitasi pelatihan tentang penggunaan pestisida yang aman",
         score: 2,
       },
       {
-        value: "tidak",
+        value: "kelompok_tidak_pernah_menyelenggarakan_pelatihan_pestisida_aman",
         label:
           "Tidak, kelompok tidak pernah menyelenggarakan atau memfasilitasi pelatihan tentang penggunaan pestisida yang aman",
         score: 0,
       },
       {
-        value: "proses",
+        value: "kelompok_sedang_proses_merencanakan_pelatihan_pestisida_aman",
         label:
           "Sedang Proses merencanakan menyelenggarakan pelatihan tentang penggunaan pestisida yang aman",
         score: 1,
@@ -3183,19 +3183,19 @@ export const stage2Questions: Question[] = [
     text: "81. Apakah kelompok mencatat atau memantau jenis pestisida yang digunakan oleh petani dan memastikan tidak menggunakan yang dilarang?",
     options: [
       {
-        value: "ya",
+        value: "kelompok_mencatat_memantau_jenis_pestisida",
         label:
           "Ya, kelompok mencatat dan memantau jenis pestisida yang digunakan oleh petani",
         score: 2,
       },
       {
-        value: "tidak",
+        value: "kelompok_belum_mencatat_memantau_jenis_pestisida",
         label:
           "Tidak, kelompok belum mencatat dan memantau jenis pestisida yang digunakan oleh petani",
         score: 0,
       },
       {
-        value: "proses",
+        value: "kelompok_sedang_proses_merencanakan_mencatat_memantau_pestisida",
         label:
           "Sedang Proses merencanakan untuk mencatat dan memantau jenis pestisida yang digunakan oleh petani",
         score: 1,

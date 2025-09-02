@@ -70,45 +70,46 @@ export default function StageResult() {
   const { toast } = useToast();
   const hasSavedRef = useRef(false);
 
-  const score = getStageScore(stage as 1 | 2 | 3);
-  const maxScore = getStageMaxScore(stage as 1 | 2 | 3);
-  const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-  
+  // === Perhitungan skor dinormalisasi ke 0..100 (UI & DB sama) ===
+  const rawScore = getStageScore(stage as 1 | 2 | 3);
+  const rawMax   = getStageMaxScore(stage as 1 | 2 | 3);
+  const score = rawMax > 0 ? Math.round((rawScore / rawMax) * 100) : 0; // 0..100
+  const maxScore = 100;                   // tampil & simpan selalu 100
+  const percentage = score;               // identik
+
+  // Persentil: jika skor 100 → 100, selain itu variasi kecil
+  const percentile = score === 100
+    ? 100
+    : Math.min(95, Math.max(5, Math.round(score + Math.random() * 10)));
+
   // Different minimum pass scores based on stage
   const minimumPassScore = stage === 1 ? 70 : 60; // Stage 1 (eligibility) requires 70%
   const isPassed = percentage >= minimumPassScore;
   const isEligible = stage === 1 ? isEligibleForNextStage(1) : true; // Check eligibility for stage 1
-  const percentile = Math.min(
-    95,
-    Math.max(5, Math.round(percentage + Math.random() * 10))
-  );
 
+  // Simpan hasil ke DB (upsert user_id+stage) — nilai 0..100
   useEffect(() => {
     if (!user || hasSavedRef.current) return;
-    const answers = stage === 1 ? assessmentData.stage1 : stage === 2 ? assessmentData.stage2 : assessmentData.stage3;
+    const answers =
+      stage === 1
+        ? assessmentData.stage1
+        : stage === 2
+        ? assessmentData.stage2
+        : assessmentData.stage3;
     if (answers.length === 0) return; // nothing to save
 
     (async () => {
       try {
-        console.log(`💾 Saving Stage ${stage} results:`, {
-          score,
-          maxScore,
-          percentage,
-          answersCount: answers.length
-        });
-        
         await api.saveAssessmentResult({
           userId: user.id,
           stage: stage as 1 | 2 | 3,
           answers,
-          totalScore: score,
-          maxScore,
-          percentage,
+          totalScore: score,  // 0..100
+          maxScore,           // 100
+          percentage,         // 0..100
         });
-        
+        console.log("💾 save payload", { uid: user.id, stage, answersCount: answers.length, score });
         hasSavedRef.current = true;
-        console.log(`✅ Stage ${stage} results saved successfully`);
-        
         toast({
           title: "Hasil Tersimpan",
           description: `Hasil ${getStageTitle()} berhasil disimpan ke database.`,
@@ -138,7 +139,6 @@ export default function StageResult() {
   };
 
   const handleContinue = () => {
-    // For stage 1 (eligibility test), check if eligible before proceeding
     if (stage === 1 && !isEligible) {
       toast({
         title: "Tidak Memenuhi Syarat",
@@ -147,21 +147,13 @@ export default function StageResult() {
       });
       return;
     }
-    
-    if (stage === 1) {
-      navigate("/milestone-a");
-    } else if (stage === 2) {
-      navigate("/milestone-b");
-    } else {
-      navigate("/final-result");
-    }
+    if (stage === 1) navigate("/milestone-a");
+    else if (stage === 2) navigate("/milestone-b");
+    else navigate("/final-result");
   };
 
   const handleRetry = () => {
-    // For stage 1 (eligibility test), allow retry
-    if (stage === 1) {
-      navigate("/eligibility");
-    }
+    if (stage === 1) navigate("/eligibility");
   };
 
   const handleConfirmExit = () => {
@@ -229,7 +221,6 @@ export default function StageResult() {
       const timer = setTimeout(() => {
         navigate("/results/final");
       }, 3000);
-
       return () => clearTimeout(timer);
     }
   }, [stage, navigate]);
@@ -239,55 +230,45 @@ export default function StageResult() {
     { name: "Sisa Skor", value: maxScore - score, fill: "#e5e7eb" },
   ];
 
-  // Calculate scores per principle for spider chart
+  // === Spider chart per prinsip: hitung dari JAWABAN yang benar-benar muncul ===
   const getPrincipleScores = () => {
-    const stageQuestions = getStageQuestions();
-    const stageAnswers = getStageAnswers();
-    
-    // Group scores by principle
-    const principleScores = {
-      "Prinsip 1": { score: 0, maxScore: 0 },
-      "Prinsip 2": { score: 0, maxScore: 0 },
-      "Prinsip 3": { score: 0, maxScore: 0 },
-      "Prinsip 4": { score: 0, maxScore: 0 },
+    const stageAnswersMap = getStageAnswers();
+    const answers: Answer[] =
+      stage === 1 ? assessmentData.stage1 :
+      stage === 2 ? assessmentData.stage2 :
+      assessmentData.stage3;
+
+    type Bucket = { score: number; max: number };
+    const buckets: Record<string, Bucket> = {
+      "Prinsip 1": { score: 0, max: 0 },
+      "Prinsip 2": { score: 0, max: 0 },
+      "Prinsip 3": { score: 0, max: 0 },
+      "Prinsip 4": { score: 0, max: 0 },
     };
 
-    stageQuestions.forEach((question) => {
-      const questionPrinciple = getQuestionPrincipleCriteria(question.id, {
-        stage: stage as 1 | 2 | 3,
-      });
-      
-      if (questionPrinciple) {
-        const principleTitle = questionPrinciple.principle.title;
-        const answer = stageAnswers[question.id];
-        
-        if (answer) {
-          // Add actual score
-          principleScores[principleTitle].score += answer.score;
-          if (answer.subAnswers) {
-            principleScores[principleTitle].score += answer.subAnswers.reduce((sum, sub) => sum + sub.score, 0);
-          }
-        }
-        
-        // Add max possible score (2 points per question)
-        principleScores[principleTitle].maxScore += 2;
-        
-        // Add max score for sub-questions if they exist and are triggered
-        if (question.subQuestions && answer) {
-          const relevantSubs = question.subQuestions.filter((sq) =>
-            (sq.triggerValue && sq.triggerValue === answer.value) ||
-            (!sq.triggerValue && question.triggerSubQuestions && answer.value === question.triggerSubQuestions)
-          );
-          principleScores[principleTitle].maxScore += relevantSubs.length * 2;
-        }
-      }
+    answers.forEach((ans) => {
+      const info = ans.questionId
+        ? getQuestionPrincipleCriteria(ans.questionId, { stage: stage as 1 | 2 | 3 })
+        : null;
+      if (!info) return;
+
+      const principleTitle = info.principle?.title as keyof typeof buckets;
+      if (!buckets[principleTitle]) return;
+
+      // Skor aktual: main + sub yang tampil
+      const main = Number(ans.score) || 0;
+      const sub  = (ans.subAnswers || []).reduce((s, x) => s + (Number(x.score) || 0), 0);
+      buckets[principleTitle].score += main + sub;
+
+      // Maksimum: 2 (pertanyaan utama) + 2 per sub-pertanyaan yang tampil
+      const subCount = Array.isArray(ans.subAnswers) ? ans.subAnswers.length : 0;
+      buckets[principleTitle].max += 2 + (subCount * 2);
     });
 
-    // Convert to radar chart format
-    return Object.entries(principleScores).map(([principle, data]) => ({
+    return Object.entries(buckets).map(([principle, v]) => ({
       principle,
-      score: data.maxScore > 0 ? Math.round((data.score / data.maxScore) * 100) : 0,
-      maxScore: 100, // Display as percentage
+      score: v.max > 0 ? Math.round((v.score / v.max) * 100) : 0,
+      maxScore: 100,
     }));
   };
 
@@ -389,9 +370,7 @@ export default function StageResult() {
 
           {/* Primary Action Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mb-8">
-            {/* Show different buttons based on stage and eligibility */}
             {stage === 1 && !isEligible ? (
-              // Stage 1 (Eligibility) with insufficient score - show retry option
               <>
                 <Button
                   onClick={handleRetry}
@@ -407,7 +386,6 @@ export default function StageResult() {
                 </div>
               </>
             ) : (
-              // Eligible to continue or other stages
               <Button
                 onClick={handleContinue}
                 size="lg"
@@ -497,7 +475,7 @@ export default function StageResult() {
                     <span className="font-medium">Pencapaian</span>
                     <span className="font-semibold">{percentage}%</span>
                   </div>
-                  <Progress value={percentage} className="h-3" />
+                    <Progress value={percentage} className="h-3" />
                 </div>
                 <div className="text-sm text-muted-foreground">
                   Anda berhasil mencapai {score} dari {maxScore} poin yang

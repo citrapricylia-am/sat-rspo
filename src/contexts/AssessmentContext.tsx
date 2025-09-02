@@ -1,162 +1,120 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { stage1Questions, stage2Questions, stage3Questions } from '@/data/questions';
+// src/contexts/AssessmentContext.tsx
+import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 
-export interface Answer {
-	questionId: string;
-	value: string;
-	score: number;
-	subAnswers?: Answer[];
-}
+export type SubAnswer = { questionId?: string; value?: any; score: number; };
+export type Answer = { questionId?: string; value?: any; score: number; subAnswers?: SubAnswer[]; };
+export type StageIndex = 1 | 2 | 3;
 
-export interface AssessmentData {
-	stage1: Answer[];
-	stage2: Answer[];
-	stage3: Answer[];
-	currentStage: 1 | 2 | 3 | 'completed';
-}
+export type AssessmentData = { stage1: Answer[]; stage2: Answer[]; stage3: Answer[]; };
 
-interface AssessmentContextType {
-	assessmentData: AssessmentData;
-	saveAnswer: (stage: 1 | 2 | 3, answer: Answer) => void;
-	getStageScore: (stage: 1 | 2 | 3) => number;
-	getStageMaxScore: (stage: 1 | 2 | 3) => number;
-	getTotalScore: () => number;
-	nextStage: () => void;
-	resetAssessment: () => void;
-	isEligibleForNextStage: (stage: 1 | 2) => boolean;
-	getNextStage: (currentStage: 1 | 2 | 3 | 'completed') => 'milestone-a' | 'milestone-b' | 'final-result' | null;
-}
-
-const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
-
-export const useAssessment = () => {
-	const context = useContext(AssessmentContext);
-	if (context === undefined) {
-		throw new Error('useAssessment must be used within an AssessmentProvider');
-	}
-	return context;
+type AssessmentContextType = {
+  assessmentData: AssessmentData;
+  setStageAnswers: (stage: StageIndex, answers: Answer[]) => void;
+  appendStageAnswer: (stage: StageIndex, answer: Answer) => void;
+  resetStage: (stage: StageIndex) => void;
+  resetAll: () => void;
+  getStageScore: (stage: StageIndex) => number;
+  getStageMaxScore: (stage: StageIndex) => number;
+  getStagePercentage: (stage: StageIndex) => number;
+  isEligibleForNextStage: (stage: StageIndex) => boolean;
 };
 
-interface AssessmentProviderProps {
-	children: ReactNode;
-}
+const AssessmentContext = createContext<AssessmentContextType | undefined>(undefined);
+export const useAssessment = () => {
+  const ctx = useContext(AssessmentContext);
+  if (!ctx) throw new Error('useAssessment must be used within an AssessmentProvider');
+  return ctx;
+};
 
-export const AssessmentProvider: React.FC<AssessmentProviderProps> = ({ children }) => {
-	const [assessmentData, setAssessmentData] = useState<AssessmentData>({
-		stage1: [],
-		stage2: [],
-		stage3: [],
-		currentStage: 1
-	});
+export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [assessmentData, setAssessmentData] = useState<AssessmentData>({ stage1: [], stage2: [], stage3: [] });
 
-	const saveAnswer = (stage: 1 | 2 | 3, answer: Answer) => {
-		setAssessmentData(prev => {
-			const stageKey = `stage${stage}` as keyof Pick<AssessmentData, 'stage1' | 'stage2' | 'stage3'>;
-			const existingAnswers = prev[stageKey];
-			const updatedAnswers = existingAnswers.filter(a => a.questionId !== answer.questionId);
-			updatedAnswers.push(answer);
-			
-			return {
-				...prev,
-				[stageKey]: updatedAnswers
-			};
-		});
-	};
+  // load persisted
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('assessmentData');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setAssessmentData({
+          stage1: parsed.stage1 || [],
+          stage2: parsed.stage2 || [],
+          stage3: parsed.stage3 || [],
+        });
+      }
+    } catch {}
+  }, []);
 
-	const getStageScore = (stage: 1 | 2 | 3): number => {
-		const stageKey = `stage${stage}` as keyof Pick<AssessmentData, 'stage1' | 'stage2' | 'stage3'>;
-		const answers = assessmentData[stageKey];
-		return answers.reduce((total, answer) => {
-			let score = answer.score;
-			// Add sub-answers scores
-			if (answer.subAnswers) {
-				score += answer.subAnswers.reduce((subTotal, subAnswer) => subTotal + subAnswer.score, 0);
-			}
-			return total + score;
-		}, 0);
-	};
+  // persist
+  useEffect(() => {
+    try { localStorage.setItem('assessmentData', JSON.stringify(assessmentData)); } catch {}
+  }, [assessmentData]);
 
-	const getStageMaxScore = (stage: 1 | 2 | 3): number => {
-		// Select question list by stage
-		let questions = [] as typeof stage1Questions;
-		if (stage === 1) questions = stage1Questions;
-		if (stage === 2) questions = stage2Questions;
-		if (stage === 3) questions = stage3Questions;
+  const setStageAnswers = (stage: StageIndex, answers: Answer[]) => {
+    setAssessmentData(prev => ({ ...prev, [`stage${stage}`]: answers } as AssessmentData));
+  };
 
-		let maxScore = 0;
-		for (const q of questions) {
-			// Add maximum score for main question (which is 2)
-			maxScore += 2;
+  const appendStageAnswer = (stage: StageIndex, answer: Answer) => {
+    setAssessmentData(prev => {
+      const key = `stage${stage}` as const;
+      return { ...prev, [key]: [...prev[key], answer] } as AssessmentData;
+    });
+  };
 
-			// Add maximum score for ALL possible sub-questions (not just triggered ones)
-			if (q.subQuestions && q.subQuestions.length > 0) {
-				// Each sub-question also has maximum score of 2
-				maxScore += q.subQuestions.length * 2;
-			}
-		}
+  const resetStage = (stage: StageIndex) => {
+    setAssessmentData(prev => ({ ...prev, [`stage${stage}`]: [] } as AssessmentData));
+  };
 
-		return maxScore;
-	};
+  const resetAll = () => setAssessmentData({ stage1: [], stage2: [], stage3: [] });
 
-	const getTotalScore = (): number => {
-		return getStageScore(1) + getStageScore(2) + getStageScore(3);
-	};
+  const getStageAnswers = (stage: StageIndex): Answer[] => {
+    const key = `stage${stage}` as const;
+    return assessmentData[key] || [];
+  };
 
-	const nextStage = () => {
-		setAssessmentData(prev => {
-			if (prev.currentStage === 1) return { ...prev, currentStage: 2 };
-			if (prev.currentStage === 2) return { ...prev, currentStage: 3 };
-			if (prev.currentStage === 3) return { ...prev, currentStage: 'completed' };
-			return prev;
-		});
-	};
+  const getStageScore = (stage: StageIndex): number => {
+    const answers = getStageAnswers(stage);
+    return answers.reduce((sum, a) => {
+      const main = Number(a.score) || 0;
+      const sub  = (a.subAnswers || []).reduce((s, x) => s + (Number(x.score) || 0), 0);
+      return sum + main + sub;
+    }, 0);
+  };
 
-	const resetAssessment = () => {
-		setAssessmentData({
-			stage1: [],
-			stage2: [],
-			stage3: [],
-			currentStage: 1
-		});
-	};
+  // MAX dihitung dari jawaban yg tampil: +2 utk main, +2 per subAnswer tampil
+  const getStageMaxScore = (stage: StageIndex): number => {
+    const answers = getStageAnswers(stage);
+    return answers.reduce((max, ans) => {
+      const subCount = Array.isArray(ans.subAnswers) ? ans.subAnswers.length : 0;
+      return max + 2 + (subCount * 2);
+    }, 0);
+  };
 
-	const isEligibleForNextStage = (stage: 1 | 2): boolean => {
-		const score = getStageScore(stage);
-		const maxScore = getStageMaxScore(stage);
-		
-		// For stage 1 (eligibility test), require 70% minimum
-		if (stage === 1) {
-			const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
-			return percentage >= 70;
-		}
-		
-		// For other stages, use different criteria if needed
-		const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
-		return percentage >= 60; // Lower threshold for later stages
-	};
+  const getStagePercentage = (stage: StageIndex): number => {
+    const score = getStageScore(stage);
+    const max   = getStageMaxScore(stage);
+    if (max <= 0) return 0;
+    return Math.max(0, Math.min(100, Math.round((score / max) * 100)));
+  };
 
-	const getNextStage = (currentStage: 1 | 2 | 3 | 'completed') => {
-		if (currentStage === 1) return 'milestone-a';
-		if (currentStage === 2) return 'milestone-b';
-		if (currentStage === 3) return 'final-result';
-		return null;
-	};
+  const isEligibleForNextStage = (stage: StageIndex): boolean => {
+    const percentage = getStagePercentage(stage);
+    // Stage 1 (eligibility test) requires 70% to proceed
+    // Stages 2 and 3 require 60% to proceed
+    const minimumPassScore = stage === 1 ? 70 : 60;
+    return percentage >= minimumPassScore;
+  };
 
-	const value = {
-		assessmentData,
-		saveAnswer,
-		getStageScore,
-		getStageMaxScore,
-		getTotalScore,
-		nextStage,
-		resetAssessment,
-		isEligibleForNextStage,
-		getNextStage
-	};
+  const value = useMemo<AssessmentContextType>(() => ({
+    assessmentData,
+    setStageAnswers,
+    appendStageAnswer,
+    resetStage,
+    resetAll,
+    getStageScore,
+    getStageMaxScore,
+    getStagePercentage,
+    isEligibleForNextStage,
+  }), [assessmentData]);
 
-	return (
-		<AssessmentContext.Provider value={value}>
-			{children}
-		</AssessmentContext.Provider>
-	);
+  return <AssessmentContext.Provider value={value}>{children}</AssessmentContext.Provider>;
 };

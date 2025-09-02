@@ -3,14 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle,
-  BookOpen,
-  Target,
-} from "lucide-react";
+import { BookOpen, Target, ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAssessment, Answer } from "@/contexts/AssessmentContext";
 import {
@@ -28,15 +21,15 @@ const AssessmentStage = () => {
   const { stage } = useParams<{ stage: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { assessmentData, saveAnswer } = useAssessment();
+  const { assessmentData, setStageAnswers } = useAssessment(); // ← gunakan setStageAnswers, bukan saveAnswer
   const { toast } = useToast();
 
   const stageNumber = parseInt(stage?.replace("stage", "") || "1") as 1 | 2 | 3;
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [stageAnswers, setStageAnswers] = useState<Answer[]>([]);
+  const [stageAnswers, setStageAnswersLocal] = useState<Answer[]>([]);
 
-  // Get questions for current stage
+  // Ambil daftar pertanyaan untuk stage ini (dengan filter role + dependsOn)
   const getAllQuestions = (): Question[] => {
     let questions: Question[] = [];
 
@@ -52,19 +45,19 @@ const AssessmentStage = () => {
         break;
     }
 
-    // Filter questions based on role
+    // Filter berdasarkan role
     questions = questions.filter(
       (q) => !q.roleSpecific || q.roleSpecific === user?.role
     );
 
-    // Filter questions based on dependencies from previous stages and current stage
+    // Filter berdasarkan dependsOn (lihat dari stage sebelumnya & jawaban yang sedang diisi)
     questions = questions.filter((q) => {
       if (!q.dependsOn) return true;
 
-      // Check if dependency is satisfied from previous stages first
+      // Cek di stage sebelumnya (dari context)
       let dependencyAnswer = findAnswerInPreviousStages(q.dependsOn.questionId);
 
-      // If not found in previous stages, check current stage
+      // Jika belum ketemu, cek di jawaban stage saat ini (local state)
       if (!dependencyAnswer) {
         dependencyAnswer = findAnswerInCurrentStage(q.dependsOn.questionId);
       }
@@ -75,9 +68,7 @@ const AssessmentStage = () => {
     return questions;
   };
 
-  const findAnswerInPreviousStages = (
-    questionId: string
-  ): Answer | undefined => {
+  const findAnswerInPreviousStages = (questionId: string): Answer | undefined => {
     const allAnswers = [
       ...assessmentData.stage1,
       ...assessmentData.stage2,
@@ -92,33 +83,41 @@ const AssessmentStage = () => {
 
   const questions = getAllQuestions();
   const currentQuestion = questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const progress =
+    questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
 
+  // Load jawaban yang sudah tersimpan di context untuk stage ini
   useEffect(() => {
-    // Load existing answers for this stage
     const stageKey = `stage${stageNumber}` as keyof Pick<
       typeof assessmentData,
       "stage1" | "stage2" | "stage3"
     >;
-    setStageAnswers(assessmentData[stageKey]);
+    setStageAnswersLocal(assessmentData[stageKey] || []);
   }, [stageNumber, assessmentData]);
 
+  // Saat user mengubah jawaban pada pertanyaan saat ini
   const handleAnswerChange = (answer: Answer) => {
-    const updatedAnswers = stageAnswers.filter(
-      (a) => a.questionId !== answer.questionId
-    );
-    updatedAnswers.push(answer);
-    setStageAnswers(updatedAnswers);
-    saveAnswer(stageNumber, answer);
+    const updated = stageAnswers.filter((a) => a.questionId !== answer.questionId);
+    updated.push({
+      ...answer,
+      // pastikan skor bertipe number (menghindari "2" string)
+      score: Number(answer.score) || 0,
+      subAnswers: Array.isArray(answer.subAnswers)
+        ? answer.subAnswers.map((sa) => ({ ...sa, score: Number(sa.score) || 0 }))
+        : [],
+    });
+
+    // Simpan ke local state (untuk rendering & dependsOn) …
+    setStageAnswersLocal(updated);
+    // …dan simpan ke context (kunci agar StageResult tidak 0/0)
+    setStageAnswers(stageNumber, updated);
   };
 
   const getCurrentAnswer = (): Answer | undefined => {
-    return stageAnswers.find((a) => a.questionId === currentQuestion?.id);
+    return currentQuestion ? stageAnswers.find((a) => a.questionId === currentQuestion.id) : undefined;
   };
 
-  const canProceed = (): boolean => {
-    return !!getCurrentAnswer();
-  };
+  const canProceed = (): boolean => !!getCurrentAnswer();
 
   const handleNext = () => {
     if (!canProceed()) {
@@ -133,7 +132,8 @@ const AssessmentStage = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
     } else {
-      // Stage completed, go to results
+      // Pastikan context sudah terisi penuh sebelum pindah
+      setStageAnswers(stageNumber, stageAnswers);
       navigate(`/results/stage${stageNumber}`);
     }
   };
@@ -144,6 +144,7 @@ const AssessmentStage = () => {
     }
   };
 
+  // Jika tidak ada pertanyaan (setelah filter), tampilkan info & tombol kembali
   if (!currentQuestion) {
     return (
       <Layout>
@@ -186,7 +187,7 @@ const AssessmentStage = () => {
                   Tahap {stageNumber}: {getStageName()}
                 </CardTitle>
                 <div className="text-sm text-muted-foreground">
-                  {currentQuestionIndex + 1} dari {questions.length}
+                  {questions.length > 0 ? currentQuestionIndex + 1 : 0} dari {questions.length}
                 </div>
               </div>
               <div className="space-y-2">
@@ -199,7 +200,7 @@ const AssessmentStage = () => {
             </CardHeader>
           </Card>
 
-          {/* Principle & Criteria Context - Minimalist Design */}
+          {/* Principle & Criteria Context */}
           {(() => {
             const context = getQuestionPrincipleCriteria(currentQuestion.id, {
               role: user?.role as "petani" | "manajer" | undefined,
@@ -211,7 +212,6 @@ const AssessmentStage = () => {
               <Card className="border border-border/50 bg-background/95 backdrop-blur">
                 <CardContent className="p-4">
                   <div className="space-y-3">
-                    {/* Principle Section */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <BookOpen className="h-4 w-4 text-primary" />
@@ -223,11 +223,7 @@ const AssessmentStage = () => {
                         {context.principle.description}
                       </p>
                     </div>
-
-                    {/* Separator */}
                     <div className="h-px bg-border" />
-
-                    {/* Criteria Section */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Target className="h-3 w-3 text-secondary" />
