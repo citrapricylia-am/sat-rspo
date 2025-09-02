@@ -1,3 +1,4 @@
+// src/pages/Register.tsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -28,99 +29,67 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate required fields
-    if (!formData.fullName.trim()) {
-      toast({
-        title: "Error",
-        description: "Nama lengkap harus diisi",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!formData.phone.trim()) {
-      toast({
-        title: "Error",
-        description: "Nomor telepon harus diisi",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!formData.address.trim()) {
-      toast({
-        title: "Error",
-        description: "Alamat harus diisi",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Password tidak cocok",
-        variant: "destructive"
-      });
-      return;
-    }
 
+    // Validasi basic
+    if (!formData.fullName.trim()) {
+      toast({ title: 'Error', description: 'Nama lengkap harus diisi', variant: 'destructive' });
+      return;
+    }
+    if (!formData.phone.trim()) {
+      toast({ title: 'Error', description: 'Nomor telepon harus diisi', variant: 'destructive' });
+      return;
+    }
+    if (!formData.address.trim()) {
+      toast({ title: 'Error', description: 'Alamat harus diisi', variant: 'destructive' });
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      toast({ title: 'Error', description: 'Password tidak cocok', variant: 'destructive' });
+      return;
+    }
     if (formData.password.length < 6) {
-      toast({
-        title: "Error", 
-        description: "Password minimal 6 karakter",
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: 'Password minimal 6 karakter', variant: 'destructive' });
       return;
     }
 
     setIsLoading(true);
-    
-    // Add a timeout to prevent infinite loading
+
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
       toast({
-        title: "Timeout",
-        description: "Registrasi memakan waktu terlalu lama. Silakan coba lagi.",
-        variant: "destructive"
+        title: 'Timeout',
+        description: 'Registrasi memakan waktu terlalu lama. Silakan coba lagi.',
+        variant: 'destructive',
       });
-    }, 30000); // 30 second timeout
-    
+    }, 12000);
+
     try {
-      const success = await register(formData);
-      clearTimeout(timeoutId); // Clear timeout if successful
-      
-      if (success) {
-        toast({
-          title: "Pendaftaran Berhasil",
-          description: "Akun Anda telah dibuat. Silakan lanjutkan ke pretest.",
-        });
+      const { fullName, email, phone, address, role, password } = formData;
+      const user = await register({ fullName, email, phone, address, role, password });
+      clearTimeout(timeoutId);
+
+      if (user) {
+        toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah dibuat. Silakan lanjutkan ke pretest.' });
         navigate('/pretest');
       }
-    } catch (error) {
-      clearTimeout(timeoutId); // Clear timeout on error
-      
-      // Display the specific error message from AuthContext
-      const errorMessage = error instanceof Error ? error.message : 'Gagal mendaftarkan akun. Silakan coba lagi.';
-      
-      // Check if it's a duplicate email error
-      const isDuplicateEmail = errorMessage.includes('sudah terdaftar') || errorMessage.includes('already registered');
-      
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      const errorMessage = error?.message || 'Gagal mendaftarkan akun. Silakan coba lagi.';
+      const isDuplicateEmail = errorMessage.toLowerCase().includes('sudah terdaftar');
+
       toast({
-        title: "Error",
+        title: 'Error',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
         action: isDuplicateEmail ? (
-          <button 
+          <button
             onClick={() => navigate('/login')}
             className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm hover:bg-primary/90"
           >
             Login
           </button>
-        ) : undefined
+        ) : undefined,
       });
-      
       console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
@@ -141,9 +110,7 @@ const Register = () => {
                 <UserPlus className="w-8 h-8 text-primary-foreground" />
               </div>
               <CardTitle className="text-2xl">Daftar Akun Baru</CardTitle>
-              <CardDescription>
-                Isi data diri Anda untuk memulai assessment
-              </CardDescription>
+              <CardDescription>Isi data diri Anda untuk memulai assessment</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -236,8 +203,8 @@ const Register = () => {
                   />
                 </div>
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
                   disabled={isLoading}
                 >

@@ -1,14 +1,16 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { api, supabase } from '@/lib/api';
+import type { AppRole } from '@/lib/api';
+import { ensureProfileFor } from '@/lib/api';
 
 export interface User {
   id: string;
   fullName: string;
   email: string;
-  phone?: string;
-  address?: string;
-  role: 'petani' | 'manajer';
+  phone?: string | null;
+  address?: string | null;
+  role: AppRole;
 }
 
 interface AuthContextType {
@@ -22,27 +24,22 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  return ctx;
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  // Pantau perubahan auth
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_, session) => {
       if (session?.user) {
         try {
-          const profile = await api.getUserProfile(session.user.id);
+          const profile = await ensureProfileFor(session.user);
           setUser(profile);
-        } catch (error) {
-          console.error('❌ Gagal fetch profile:', error);
+        } catch (err) {
+          console.error('❌ Gagal sinkron profil:', err);
           setUser(null);
         }
       } else {
@@ -50,7 +47,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     });
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      try { listener.subscription.unsubscribe(); } catch {}
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -66,7 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    await api.logout();
     setUser(null);
   };
 
