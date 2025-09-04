@@ -1,4 +1,3 @@
-// src/contexts/AssessmentContext.tsx
 import React, {
   createContext,
   useContext,
@@ -33,6 +32,7 @@ type AssessmentContextType = {
   getStageMaxScore: (stage: StageIndex) => number;
   getStagePercentage: (stage: StageIndex) => number;
   isEligibleForNextStage: (stage: StageIndex) => boolean;
+  getTotalScore: () => number;
 };
 
 const AssessmentContext = createContext<AssessmentContextType | undefined>(
@@ -41,8 +41,7 @@ const AssessmentContext = createContext<AssessmentContextType | undefined>(
 
 export const useAssessment = () => {
   const ctx = useContext(AssessmentContext);
-  if (!ctx)
-    throw new Error("useAssessment must be used within an AssessmentProvider");
+  if (!ctx) throw new Error("useAssessment must be used within a provider");
   return ctx;
 };
 
@@ -67,18 +66,14 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
           stage3: parsed.stage3 || [],
         });
       }
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   }, []);
 
   // persist
   useEffect(() => {
     try {
       localStorage.setItem("assessmentData", JSON.stringify(assessmentData));
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   }, [assessmentData]);
 
   const setStageAnswers = (stage: StageIndex, answers: Answer[]) => {
@@ -91,7 +86,10 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
   const appendStageAnswer = (stage: StageIndex, answer: Answer) => {
     setAssessmentData((prev) => {
       const key = `stage${stage}` as const;
-      return { ...prev, [key]: [...prev[key], answer] } as AssessmentData;
+      return {
+        ...prev,
+        [key]: [...prev[key], answer],
+      } as AssessmentData;
     });
   };
 
@@ -110,52 +108,39 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
     return assessmentData[key] || [];
   };
 
-  /**
-   * 🔹 Hitung skor aktual: pertanyaan utama + semua subAnswer yang MUNCUL
-   */
   const getStageScore = (stage: StageIndex): number => {
-    const answers = getStageAnswers(stage);
-    return answers.reduce((sum, a) => {
-      const main = Number(a.score) || 0;
-      const sub = (a.subAnswers || []).reduce(
-        (s, x) => s + (Number(x.score) || 0),
-        0
-      );
-      return sum + main + sub;
-    }, 0);
-  };
+  const answers = getStageAnswers(stage);
+  return answers.reduce((sum, a) => {
+    const main = Number(a.score) || 0;
+    const sub  = (a.subAnswers || []).reduce((s, x) => s + (Number(x.score) || 0), 0);
+    return sum + main + sub;
+  }, 0);
+};
 
-  /**
-   * 🔹 Hitung maksimum berdasarkan jawaban yang MUNCUL:
-   *    2 poin untuk pertanyaan utama + 2 poin untuk setiap subAnswer yang ada
-   */
-  const getStageMaxScore = (stage: StageIndex): number => {
-    const answers = getStageAnswers(stage);
-    return answers.reduce((max, ans) => {
-      const subCount = Array.isArray(ans.subAnswers) ? ans.subAnswers.length : 0;
-      return max + 2 + subCount * 2;
-    }, 0);
-  };
+// MAX = 2 (main) + 2 * jumlah subAnswer yang MUNCUL (bukan skor > 0)
+const getStageMaxScore = (stage: StageIndex): number => {
+  const answers = getStageAnswers(stage);
+  return answers.reduce((max, ans) => {
+    const subCount = Array.isArray(ans.subAnswers) ? ans.subAnswers.length : 0;
+    return max + 2 + (subCount * 2);
+  }, 0);
+};
 
-  /**
-   * 🔹 Persentase 0..100
-   */
   const getStagePercentage = (stage: StageIndex): number => {
     const score = getStageScore(stage);
     const max = getStageMaxScore(stage);
     if (max <= 0) return 0;
-    return Math.max(0, Math.min(100, Math.round((score / max) * 100)));
+    return Math.round((score / max) * 100);
   };
 
-  /**
-   * 🔹 Aturan kelulusan:
-   *    Stage 1: minimal 70%
-   *    Stage 2 & 3: minimal 60%
-   */
   const isEligibleForNextStage = (stage: StageIndex): boolean => {
     const percentage = getStagePercentage(stage);
     const minimumPassScore = stage === 1 ? 70 : 60;
     return percentage >= minimumPassScore;
+  };
+
+  const getTotalScore = (): number => {
+    return getStageScore(1) + getStageScore(2) + getStageScore(3);
   };
 
   const value = useMemo<AssessmentContextType>(
@@ -169,6 +154,7 @@ export const AssessmentProvider: React.FC<{ children: ReactNode }> = ({
       getStageMaxScore,
       getStagePercentage,
       isEligibleForNextStage,
+      getTotalScore,
     }),
     [assessmentData]
   );

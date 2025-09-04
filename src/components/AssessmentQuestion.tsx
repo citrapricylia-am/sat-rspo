@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Question, SubQuestion } from '@/data/questions';
 import { Answer } from '@/contexts/AssessmentContext';
 import { parseTextWithTooltips } from '@/utils/textHelpers';
+import { Principle, Criteria } from '@/data/principlesCriteria';
 
 interface AssessmentQuestionProps {
   question: Question;

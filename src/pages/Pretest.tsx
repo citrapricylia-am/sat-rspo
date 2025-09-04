@@ -1,21 +1,26 @@
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
-import { PlayCircle, User, Mail, Phone, MapPin, UserCheck } from 'lucide-react';
-import Layout from '@/components/Layout';
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { PlayCircle, User, Mail, Phone, MapPin, UserCheck } from "lucide-react";
+import Layout from "@/components/Layout";
 
 const Pretest = () => {
-  const { user } = useAuth();
+  const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
 
-  if (!user) {
-    return null;
-  }
+  if (loading) return null;
+  if (!user || !profile) return null;
 
   const handleStartAssessment = () => {
-    navigate('/assessment/stage1');
+    navigate("/assessment/stage1");
   };
 
   return (
@@ -39,13 +44,13 @@ const Pretest = () => {
                   <User className="w-5 h-5 text-primary" />
                   Data Diri
                 </h3>
-                
+
                 <div className="grid gap-3">
                   <div className="flex items-center gap-3">
                     <User className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm text-muted-foreground">Nama Lengkap</p>
-                      <p className="font-medium">{user.fullName}</p>
+                      <p className="font-medium">{profile.fullName}</p>
                     </div>
                   </div>
 
@@ -53,7 +58,7 @@ const Pretest = () => {
                     <Mail className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium">{user.email}</p>
+                      <p className="font-medium">{profile.email}</p>
                     </div>
                   </div>
 
@@ -61,7 +66,7 @@ const Pretest = () => {
                     <Phone className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm text-muted-foreground">Nomor Telepon</p>
-                      <p className="font-medium">{user.phone}</p>
+                      <p className="font-medium">{profile.phone || "—"}</p>
                     </div>
                   </div>
 
@@ -69,7 +74,7 @@ const Pretest = () => {
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm text-muted-foreground">Alamat</p>
-                      <p className="font-medium">{user.address}</p>
+                      <p className="font-medium">{profile.address || "—"}</p>
                     </div>
                   </div>
 
@@ -78,7 +83,8 @@ const Pretest = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Role</p>
                       <Badge variant="secondary" className="mt-1">
-                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        {profile.role.charAt(0).toUpperCase() +
+                          profile.role.slice(1)}
                       </Badge>
                     </div>
                   </div>
@@ -89,14 +95,17 @@ const Pretest = () => {
               <div className="bg-card border border-border rounded-lg p-6">
                 <h3 className="text-lg font-semibold mb-4">Tentang Assessment</h3>
                 <div className="space-y-3 text-sm text-muted-foreground">
-                  <p>• Assessment terdiri dari 3 tahap: Eligibility Test, Milestone A, dan Milestone B</p>
+                  <p>
+                    • Assessment terdiri dari 3 tahap: Eligibility Test, Milestone A,
+                    dan Milestone B
+                  </p>
                   <p>• Setiap tahap memiliki pertanyaan yang disesuaikan dengan role Anda</p>
                   <p>• Jawaban akan mempengaruhi pertanyaan di tahap selanjutnya</p>
                   <p>• Anda akan mendapat skor dan rekomendasi di setiap tahap</p>
                 </div>
               </div>
 
-              <Button 
+              <Button
                 onClick={handleStartAssessment}
                 className="w-full bg-gradient-primary hover:opacity-90 transition-opacity text-lg py-6"
                 size="lg"

@@ -67,6 +67,7 @@ const Register = () => {
       const { fullName, email, phone, address, role, password } = formData;
       const user = await register({ fullName, email, phone, address, role, password });
       clearTimeout(timeoutId);
+      
 
       if (user) {
         toast({ title: 'Pendaftaran Berhasil', description: 'Akun Anda telah dibuat. Silakan lanjutkan ke pretest.' });

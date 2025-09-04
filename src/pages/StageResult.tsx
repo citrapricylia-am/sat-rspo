@@ -59,71 +59,65 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { api } from "@/lib/api";
+import { calcRawScore, calcRawMax, normalizeScore } from "@/lib/scoreUtils";
 
 export default function StageResult() {
   const { stage: stageParam } = useParams<{ stage: string }>();
   const stage = parseInt(stageParam?.replace("stage", "") || "1");
-  const { assessmentData, getStageScore, getStageMaxScore, isEligibleForNextStage } =
-    useAssessment();
+  const { assessmentData } = useAssessment();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const hasSavedRef = useRef(false);
 
-  // === Perhitungan skor dinormalisasi ke 0..100 (UI & DB sama) ===
-  const rawScore = getStageScore(stage as 1 | 2 | 3);
-  const rawMax   = getStageMaxScore(stage as 1 | 2 | 3);
-  const score = rawMax > 0 ? Math.round((rawScore / rawMax) * 100) : 0; // 0..100
-  const maxScore = 100;                   // tampil & simpan selalu 100
-  const percentage = score;               // identik
+ const answers =
+  stage === 1 ? assessmentData.stage1 :
+  stage === 2 ? assessmentData.stage2 :
+                assessmentData.stage3;
 
-  // Persentil: jika skor 100 → 100, selain itu variasi kecil
-  const percentile = score === 100
-    ? 100
-    : Math.min(95, Math.max(5, Math.round(score + Math.random() * 10)));
+const rawScore = calcRawScore(answers);
+const rawMax   = calcRawMax(answers);
+const score    = normalizeScore(rawScore, rawMax); // 0..100
+const maxScore = 100;
+const percentage = score;
+const percentile = score;
 
-  // Different minimum pass scores based on stage
-  const minimumPassScore = stage === 1 ? 70 : 60; // Stage 1 (eligibility) requires 70%
-  const isPassed = percentage >= minimumPassScore;
-  const isEligible = stage === 1 ? isEligibleForNextStage(1) : true; // Check eligibility for stage 1
+const minimumPassScore = stage === 1 ? 70 : 60;
+const isPassed = percentage >= minimumPassScore;
+// hanya stage 1 yang butuh “eligible”; stage lain selalu true
+const isEligible = stage === 1 ? isPassed : true;
 
-  // Simpan hasil ke DB (upsert user_id+stage) — nilai 0..100
-  useEffect(() => {
-    if (!user || hasSavedRef.current) return;
-    const answers =
-      stage === 1
-        ? assessmentData.stage1
-        : stage === 2
-        ? assessmentData.stage2
-        : assessmentData.stage3;
-    if (answers.length === 0) return; // nothing to save
+ useEffect(() => {
+  if (!user || hasSavedRef.current) return;
+  if (answers.length === 0) return;
 
-    (async () => {
-      try {
-        await api.saveAssessmentResult({
-          userId: user.id,
-          stage: stage as 1 | 2 | 3,
-          answers,
-          totalScore: score,  // 0..100
-          maxScore,           // 100
-          percentage,         // 0..100
-        });
-        console.log("💾 save payload", { uid: user.id, stage, answersCount: answers.length, score });
-        hasSavedRef.current = true;
-        toast({
-          title: "Hasil Tersimpan",
-          description: `Hasil ${getStageTitle()} berhasil disimpan ke database.`,
-        });
-      } catch (e) {
-        console.error(`❌ Gagal menyimpan hasil Stage ${stage}:`, e);
-        toast({
-          title: "Error",
-          description: `Gagal menyimpan hasil ${getStageTitle()}. Silakan coba lagi.`,
-          variant: "destructive"
-        });
-      }
-    })();
-  }, [user, stage, assessmentData, score, maxScore, percentage, toast]);
+  (async () => {
+    try {
+      await api.saveAssessmentResult({
+        userId: user.id,
+        stage: stage as 1 | 2 | 3,
+        answers,
+        totalScore: score, // 0..100 hasil normalisasi
+        maxScore: 100,
+      });
+      hasSavedRef.current = true;
+      toast({
+        title: "Hasil Tersimpan",
+        description: `Hasil ${getStageTitle()} berhasil disimpan ke database.`,
+      });
+    } catch (e) {
+      console.error(`❌ Gagal menyimpan hasil Stage ${stage}:`, e);
+      toast({
+        title: "Error",
+        description: `Gagal menyimpan hasil ${getStageTitle()}. Silakan coba lagi.`,
+        variant: "destructive",
+      });
+    }
+  })();
+// depend pada identitas user dan input payload saja
+}, [user?.id, stage, answers.length, score]);
+
+
 
   const getStageTitle = () => {
     switch (stage) {
@@ -478,8 +472,8 @@ export default function StageResult() {
                     <Progress value={percentage} className="h-3" />
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Anda berhasil mencapai {score} dari {maxScore} poin yang
-                  tersedia
+                  Anda mengumpulkan {rawScore} dari {rawMax} poin mentah
+  (ditampilkan sebagai {percentage}%).
                 </div>
               </CardContent>
             </Card>

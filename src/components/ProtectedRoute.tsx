@@ -1,18 +1,20 @@
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+// src/components/ProtectedRoute.tsx
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
+type Props = { children: JSX.Element };
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated } = useAuth();
+export default function ProtectedRoute({ children }: Props) {
+  const { user, loading } = useAuth();
+  const location = useLocation();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  // TUNGGU auth selesai dulu (bisa ganti dengan spinner)
+  if (loading) return null;
+
+  // IZINKAN jika sudah ada user; jika tidak, redirect ke login
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  return <>{children}</>;
-};
-
-export default ProtectedRoute;
+  return children;
+}

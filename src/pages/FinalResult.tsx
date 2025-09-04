@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAssessment, Answer } from "@/contexts/AssessmentContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,9 +43,10 @@ import {
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useToast } from "@/hooks/use-toast";
+import { calcRawScore, calcRawMax, normalizeScore } from "@/lib/scoreUtils";
 
 export default function FinalResult() {
-  const { assessmentData, getTotalScore, resetAssessment, getStageMaxScore } = useAssessment();
+  const { assessmentData, getTotalScore, resetAll, getStageMaxScore } = useAssessment();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -71,13 +72,19 @@ export default function FinalResult() {
     stage3: getStageMaxScore(3) 
   };
   const totalMaxScore = maxScores.stage1 + maxScores.stage2 + maxScores.stage3;
-  const totalPercentage = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0;
+  const totalPercentage =
+  totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0;
+const pct = (score: number, max: number) =>
+  max > 0 ? Math.round((score / max) * 100) : 0;
   const minimumPassScore = 60;
   const isPassed = totalPercentage >= minimumPassScore;
-  const percentile = Math.min(
-    95,
-    Math.max(5, Math.round(totalPercentage + Math.random() * 10))
-  );
+  const percentile =
+totalPercentage === 100
+? 100
+: Math.min(
+95,
+Math.max(5, Math.round(totalPercentage + Math.random() * 10))
+);
 
   const scoreDistributionData = [
     { name: "Skor Anda", value: totalScore, fill: "#22c55e" },
@@ -85,26 +92,10 @@ export default function FinalResult() {
   ];
 
   const categoryData = [
-    {
-      category: "Eligibility",
-      score: stage1Score,
-      maxScore: maxScores.stage1,
-      percentage: Math.round((stage1Score / maxScores.stage1) * 100),
-    },
-    {
-      category: "Milestone A",
-      score: stage2Score,
-      maxScore: maxScores.stage2,
-      percentage: Math.round((stage2Score / maxScores.stage2) * 100),
-    },
-    {
-      category: "Milestone B",
-      score: stage3Score,
-      maxScore: maxScores.stage3,
-      percentage: Math.round((stage3Score / maxScores.stage3) * 100),
-    },
-  ];
-
+  { category: "Eligibility",  score: stage1Score, maxScore: maxScores.stage1, percentage: pct(stage1Score, maxScores.stage1) },
+  { category: "Milestone A",  score: stage2Score, maxScore: maxScores.stage2, percentage: pct(stage2Score, maxScores.stage2) },
+  { category: "Milestone B",  score: stage3Score, maxScore: maxScores.stage3, percentage: pct(stage3Score, maxScores.stage3) },
+];
   const getRecommendations = () => {
     if (totalPercentage >= 85) {
       return [
@@ -494,7 +485,7 @@ export default function FinalResult() {
               <div className="grid gap-4">
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/stage-result?stage=1")}
+                  onClick={() => navigate("/results/stage1")}
                   className="w-full justify-start"
                 >
                   <FileText className="mr-2 h-4 w-4" />
@@ -502,7 +493,7 @@ export default function FinalResult() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/stage-result?stage=2")}
+                  onClick={() => navigate("/results/stage2")}
                   className="w-full justify-start"
                 >
                   <FileText className="mr-2 h-4 w-4" />
@@ -510,7 +501,7 @@ export default function FinalResult() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/stage-result?stage=3")}
+                  onClick={() => navigate("/results/stage3")}
                   className="w-full justify-start"
                 >
                   <FileText className="mr-2 h-4 w-4" />
@@ -519,7 +510,7 @@ export default function FinalResult() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    resetAssessment();
+                    resetAll();
                     navigate("/");
                   }}
                   className="w-full justify-start"

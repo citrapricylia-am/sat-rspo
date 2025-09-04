@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,8 @@ import { useToast } from "@/hooks/use-toast";
 const AssessmentStage = () => {
   const { stage } = useParams<{ stage: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
+const role = profile?.role; // "petani" | "manajer"
   const { assessmentData, setStageAnswers } = useAssessment(); // ← gunakan setStageAnswers, bukan saveAnswer
   const { toast } = useToast();
 
@@ -47,8 +48,8 @@ const AssessmentStage = () => {
 
     // Filter berdasarkan role
     questions = questions.filter(
-      (q) => !q.roleSpecific || q.roleSpecific === user?.role
-    );
+ (q) => !q.roleSpecific || q.roleSpecific === profile?.role
+ );
 
     // Filter berdasarkan dependsOn (lihat dari stage sebelumnya & jawaban yang sedang diisi)
     questions = questions.filter((q) => {
@@ -80,20 +81,52 @@ const AssessmentStage = () => {
   const findAnswerInCurrentStage = (questionId: string): Answer | undefined => {
     return stageAnswers.find((answer) => answer.questionId === questionId);
   };
+  
+// ambil soal sesuai stage
+const baseQuestions = useMemo(() => {
+  if (stageNumber === 1) return stage1Questions;
+  if (stageNumber === 2) return stage2Questions;
+  return stage3Questions;
+}, [stageNumber]);
 
-  const questions = getAllQuestions();
-  const currentQuestion = questions[currentQuestionIndex];
-  const progress =
-    questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
+// filter berdasarkan role
+const questions = useMemo(() => {
+  return (baseQuestions || []).filter((q: any) => {
+    if (!q) return false;
+    if (q.roleSpecific) return q.roleSpecific === role;     // khusus 1 role
+    if (Array.isArray(q.roles)) return q.roles.includes(role); // multi-role
+    if (q.role) return q.role === role;                     // properti tunggal
+    return true; // soal umum → tampil untuk semua
+  });
+}, [baseQuestions, role]);
 
-  // Load jawaban yang sudah tersimpan di context untuk stage ini
-  useEffect(() => {
-    const stageKey = `stage${stageNumber}` as keyof Pick<
-      typeof assessmentData,
-      "stage1" | "stage2" | "stage3"
-    >;
-    setStageAnswersLocal(assessmentData[stageKey] || []);
-  }, [stageNumber, assessmentData]);
+
+// clamp index kalau jumlah pertanyaan berubah
+useEffect(() => {
+  if (currentQuestionIndex > questions.length - 1) {
+    setCurrentQuestionIndex(Math.max(0, questions.length - 1));
+  }
+}, [questions.length, currentQuestionIndex]);
+
+// current question & progress
+const currentQuestion = questions[currentQuestionIndex];
+const progress =
+  questions.length > 0
+    ? ((currentQuestionIndex + 1) / questions.length) * 100
+    : 0;
+
+// load jawaban yang sudah tersimpan untuk stage ini
+useEffect(() => {
+  const stageKey = `stage${stageNumber}` as keyof Pick<
+    typeof assessmentData,
+    "stage1" | "stage2" | "stage3"
+  >;
+  setStageAnswersLocal(assessmentData[stageKey] || []);
+}, [stageNumber, assessmentData]);
+
+// guard render (hindari render sebelum role siap)
+if (authLoading) return null;
+if (!profile) return null;
 
   // Saat user mengubah jawaban pada pertanyaan saat ini
   const handleAnswerChange = (answer: Answer) => {
@@ -203,9 +236,9 @@ const AssessmentStage = () => {
           {/* Principle & Criteria Context */}
           {(() => {
             const context = getQuestionPrincipleCriteria(currentQuestion.id, {
-              role: user?.role as "petani" | "manajer" | undefined,
-              stage: stageNumber,
-            });
+role: profile?.role as "petani" | "manajer" | undefined,
+stage: stageNumber,
+});
             if (!context) return null;
 
             return (
