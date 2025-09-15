@@ -822,7 +822,7 @@ export const stage1Questions: Question[] = [
       {
         id: "q27_sub1",
         text: "27a. Apakah Bapak/Ibu tahu bahwa tidak boleh menanam di area sempadan sungai?",
-        triggerValue: "ya",
+        triggerValue: "ya_mengetahui_batas_sungai_di_kebun",
         options: [
           {
             value: "ya_mengetahui_tidak_boleh_menanam_di_area_sempadan_sungai",
@@ -866,7 +866,7 @@ export const stage1Questions: Question[] = [
       {
         id: "q28_sub1",
         text: "28a. Apakah Bapak/Ibu mengetahui bahwa penggunaan pestisida tersebut tidak diperbolehkan dan harus dihentikan?",
-        triggerValue: "ya",
+        triggerValue: "ya_menggunakan_pestisida_berbahaya",
         options: [
           {
             value: "ya_mengetahui_pestisida_harus_digunakan_dengan_aman",
@@ -914,7 +914,7 @@ export const stage1Questions: Question[] = [
       {
         id: "q29_sub1",
         text: "29a. Apakah kelompok telah memfasilitasi identifikasi lokasi sensitif lingkungan (HCV/HCS) sebelum petani melakukan penanaman baru?",
-        triggerValue: "ya",
+        triggerValue: "ya_kelompok_memiliki_prosedur_rencana_tanam_baru",
         options: [
           { value: "ya_telah_difasilitasi", label: "Ya, telah difasilitasi", score: 2 },
           { value: "proses_memfasilitasi", label: "Sedang Proses memfasilitasi", score: 1 },
@@ -954,7 +954,7 @@ export const stage1Questions: Question[] = [
       {
         id: "q30_sub1",
         text: "30a. Apakah kelompok sudah memetakan area tersebut dan menyimpannya sebagai dokumen kelompok?",
-        triggerValue: "ya",
+        triggerValue: "ya_kelompok_memiliki_catatan_petani_lahan_gambut",
         options: [
           {
             value: "ya_kelompok_sudah_memetakan_area",
@@ -1004,7 +1004,7 @@ export const stage1Questions: Question[] = [
       {
         id: "q31_sub1",
         text: "31. Apakah kelompok memiliki catatan historis penggunaan api dari semua anggota baru sejak 2019?",
-        triggerValue: "ya",
+        triggerValue: "ya_kelompok_mencatat_petani_membuka_lahan_dibaka",
         options: [
           {
             value: "ya_kelompok_memiliki_catatan_historis_penggunaan_api",
@@ -1054,7 +1054,7 @@ export const stage1Questions: Question[] = [
       {
         id: "q32_sub1",
         text: "32a. Apakah kelompok menyimpan informasi tentang pestisida berbahaya (misalnya WHO 1A/1B) yang pernah digunakan oleh anggota?",
-        triggerValue: "ya",
+        triggerValue: "ya_kelompok_memiliki_daftar_pestisida_anggota",
         options: [
           {
             value: "ya_kelompok_menyimpan_informasi_tentang_pestisida",
@@ -1276,7 +1276,7 @@ export const stage2Questions: Question[] = [
       {
         id: "q200_8a",
         text: "8a. Apa saja yang biasa Bapak/Ibu catat? (Misalnya: jumlah panen, jenis benih, biaya pupuk, atau transaksi jual beli?)",
-        triggerValue: "ya",
+        triggerValue: "ya_melakukan_pencatatan_hasil_panen",
         options: [
           {
             value: "jumlah_panen_dan_jenis_benih",
@@ -1298,7 +1298,7 @@ export const stage2Questions: Question[] = [
       {
         id: "q200_8b",
         text: "8b. Apakah Bapak/Ibu merasa terbantu dengan adanya pencatatan tersebut dalam mengelola kebun?",
-        triggerValue: "ya",
+        triggerValue: "ya_melakukan_pencatatan_hasil_panen",
         options: [
           {
             value: "ya_terbantu_dengan_pencatatan_kebun",
@@ -1349,7 +1349,7 @@ export const stage2Questions: Question[] = [
       {
         id: "q200_9a",
         text: "9a. Dalam pelatihan tersebut, apakah dibahas cara menanam, merawat, memanen, atau menjaga lingkungan kebun sawit?",
-        triggerValue: "ya",
+        triggerValue: "ya_mengikuti_pelatihan_cara_bertani_sawit_baik",
         options: [
           {
             value: "ya_dalam_pelatihan_dibahas_materi_tersebut",
@@ -1372,7 +1372,7 @@ export const stage2Questions: Question[] = [
       {
         id: "q200_9b",
         text: "9b. Apa hal paling penting yang Bapak/Ibu pelajari dari pelatihan tersebut?",
-        triggerValue: "ya",
+        triggerValue: "ya_mengikuti_pelatihan_cara_bertani_sawit_baik",
         options: [
           {
             value: "ya_saya_jadi_mengetahui_tentang_cara_bertani_sawit_yang_baik",
@@ -1465,7 +1465,7 @@ export const stage2Questions: Question[] = [
       {
         id: "q200_11a",
         text: "11a. Apakah ada peta atau koordinat lahan Anda yang dapat diperlihatkan? (opsional)",
-        triggerValue: "ya",
+        triggerValue: "ya_lahan_dari_warisan_pembelian_adat",
         options: [
           {
             value: "ya_ada_peta",
@@ -1511,7 +1511,7 @@ export const stage2Questions: Question[] = [
       {
         id: "q200_12a",
         text: "12a. Jika ya, apakah ada kesepakatan atau persetujuan dari mereka sebelum lahan digunakan?",
-        triggerValue: "ya",
+        triggerValue: "ya_memperoleh_lahan_dari_masyarakat_adat",
         options: [
           {
             value: "ya_ada_kesepakatan",
@@ -1598,7 +1598,7 @@ export const stage2Questions: Question[] = [
       {
         id: "q200_15a",
         text: "15a. Jika ya, apakah sedang ada proses penyelesaian yang disepakati semua pihak?",
-        triggerValue: "ya",
+        triggerValue: "Apakah lahan Bapak/Ibu sedang disengketakan oleh masyarakat sekitar atau pihak lain?",
         options: [
           {
             value: "ya_sedang_ada_proses_penyelesaian_yang_disepakati",
@@ -1641,7 +1641,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q9",
-      requiredValue: "ya",
+      requiredValue: "mengetahui_fpic",
     },
   },
   {
@@ -1666,7 +1666,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "menggunakan_tenaga_kerja_luar_keluarga",
     },
   },
   {
@@ -1694,7 +1694,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "menggunakan_tenaga_kerja_luar_keluarga",
     },
   },
   {
@@ -1719,7 +1719,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "menggunakan_tenaga_kerja_luar_keluarga",
     },
   },
   {
@@ -1746,7 +1746,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "menggunakan_tenaga_kerja_luar_keluarga",
     },
   },
   {
@@ -1771,7 +1771,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "menggunakan_tenaga_kerja_luar_keluarga",
     },
   },
   {
@@ -1797,7 +1797,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "ya_memperoleh_tenaga_kerja_luar_keluarga",
     },
   },
   {
@@ -1822,7 +1822,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "ya_memperoleh_tenaga_kerja_luar_keluarga",
     },
   },
   {
@@ -1847,7 +1847,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "menggunakan_tenaga_kerja_luar_keluarga",
     },
   },
   {
@@ -1874,7 +1874,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "ya_memperoleh_tenaga_kerja_luar_keluarga",
     },
   },
   {
@@ -1899,7 +1899,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "ya_memperoleh_tenaga_kerja_luar_keluarga",
     },
   },
   {
@@ -1990,7 +1990,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q16",
-      requiredValue: "ya",
+      requiredValue: "membayar_pekerja_sesuai_aturan",
     },
   },
   {
@@ -2015,7 +2015,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q16",
-      requiredValue: "ya",
+      requiredValue: "membayar_pekerja_sesuai_aturan",
     },
   },
   {
@@ -2040,7 +2040,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q17",
-      requiredValue: "ya",
+      requiredValue: "pekerja_tahu_hak_keluhan",
     },
   },
   {
@@ -2065,7 +2065,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q17",
-      requiredValue: "ya",
+      requiredValue: "pekerja_tahu_hak_keluhan",
     },
   },
   {
@@ -2177,7 +2177,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q19",
-      requiredValue: "ya",
+      requiredValue: "pernah_menyadari_perlakuan_tidak_adil_diskriminatif",
     },
   },
   {
@@ -2203,7 +2203,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q19",
-      requiredValue: "ya",
+      requiredValue: "pernah_menyadari_perlakuan_tidak_adil_diskriminatif",
     },
   },
   {
@@ -2228,7 +2228,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q19",
-      requiredValue: "ya",
+      requiredValue: "pernah_menyadari_perlakuan_tidak_adil_diskriminatif",
     },
   },
   {
@@ -2646,7 +2646,7 @@ export const stage2Questions: Question[] = [
         score: 0,
       },
     ],
-    triggerSubQuestions: "ya",
+    triggerSubQuestions: "ya_pernah_mengikuti_pelatihan_menanam_sawit_di_tanah_gambut",
     subQuestions: [
       {
         id: "q200_59_sub1",
@@ -2771,7 +2771,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q24",
-      requiredValue: "ya",
+      requiredValue: "Memiliki_Lahan_di_Area_Gambut",
     },
   },
   {
@@ -2797,7 +2797,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q24",
-      requiredValue: "ya",
+      requiredValue: "Memiliki_Lahan_di_Area_Gambut",
     },
   },
   {
@@ -2824,7 +2824,7 @@ export const stage2Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q24",
-      requiredValue: "ya",
+      requiredValue: "ya_memiliki_rencana_menanam_ulang_di_lahan_gambut",
     },
   },
   {
@@ -3581,7 +3581,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "Memiliki_Lahan_di_Area_Gambut",
     },
   },
   {
@@ -3609,7 +3609,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "menggunakan_tenaga_kerja_luar_keluarga",
     },
   },
   {
@@ -3637,7 +3637,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "menggunakan_tenaga_kerja_luar_keluarga",
     },
   },
   {
@@ -3665,7 +3665,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q16",
-      requiredValue: "ya",
+      requiredValue: "membayar_pekerja_sesuai_aturan",
     },
   },
   {
@@ -3693,7 +3693,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q16",
-      requiredValue: "ya",
+      requiredValue: "membayar_pekerja_sesuai_aturan",
     },
   },
   {
@@ -3721,7 +3721,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q16",
-      requiredValue: "ya",
+      requiredValue: "membayar_pekerja_sesuai_aturan",
     },
   },
   {
@@ -3749,7 +3749,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q17",
-      requiredValue: "ya",
+      requiredValue: "pekerja_tahu_hak_keluhan",
     },
   },
   {
@@ -3777,7 +3777,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q17",
-      requiredValue: "ya",
+      requiredValue: "pekerja_tahu_hak_keluhan",
     },
   },
   {
@@ -3804,7 +3804,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "Memiliki_Lahan_di_Area_Gambut",
     },
   },
   {
@@ -3829,7 +3829,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "Memiliki_Lahan_di_Area_Gambut",
     },
   },
   {
@@ -3854,7 +3854,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "Memiliki_Lahan_di_Area_Gambut",
     },
   },
   {
@@ -3882,7 +3882,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "Memiliki_Lahan_di_Area_Gambut",
     },
   },
   {
@@ -3907,7 +3907,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q14",
-      requiredValue: "ya",
+      requiredValue: "Memiliki_Lahan_di_Area_Gambut",
     },
   },
   {
@@ -4031,7 +4031,7 @@ export const stage3Questions: Question[] = [
     ],
     dependsOn: {
       questionId: "q19",
-      requiredValue: "ya",
+      requiredValue: "pernah_menyadari_perlakuan_tidak_adil_diskriminatif",
     },
   },
   {
@@ -4546,7 +4546,7 @@ export const stage3Questions: Question[] = [
         score: 1,
       },
     ],
-    triggerSubQuestions: "ya",
+    triggerSubQuestions: "ya_saya_pernah_mengalami_banjir_atau_masuknya_air_asin_di_kebun",
     subQuestions: [
       {
         id: "q300_50_sub1",
@@ -4644,7 +4644,7 @@ export const stage3Questions: Question[] = [
         score: 1,
       },
     ],
-    triggerSubQuestions: "ya",
+    triggerSubQuestions: "ya_saya_pernah_menggunakan_api_untuk_membersihkan_lahan_membakar_limbah_atau_mengendalikan_hama",
     subQuestions: [
       {
         id: "q300_53_sub1",
